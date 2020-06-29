@@ -1,4 +1,4 @@
-﻿namespace Math
+﻿namespace Core.Math
 {
     public static class RNG
     {

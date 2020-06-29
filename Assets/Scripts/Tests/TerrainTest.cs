@@ -11,7 +11,7 @@ namespace Tests
         [Test]
         public void TerrainTestSimplePasses()
         {
-            var terrainSys = new TerrainSystem();
+            var terrainSys = new TerrainGenerator();
             var temperateLayer = new TemperateLayer();
             Biome tropicalLayer = new TropicalLayer();
             var layer = terrainSys.CreateLayer(0, 16, 4, 16, temperateLayer);

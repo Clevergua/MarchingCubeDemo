@@ -1,5 +1,5 @@
 {
-    "name": "TerrainSystem",
+    "name": "Terrain",
     "references": [
         "GUID:4dfd024fc80d69f4ba44738072bda421",
         "GUID:c03dc98f4f814f54aa1cc0a98709b342",
