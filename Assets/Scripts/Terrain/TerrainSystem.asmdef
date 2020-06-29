@@ -1,0 +1,17 @@
+{
+    "name": "TerrainSystem",
+    "references": [
+        "GUID:4dfd024fc80d69f4ba44738072bda421",
+        "GUID:c03dc98f4f814f54aa1cc0a98709b342",
+        "GUID:4b998206a6522f142bef042a4896e53b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
