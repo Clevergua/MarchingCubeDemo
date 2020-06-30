@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using Math;
+using Core.Math;
 
 public class LandView : MonoBehaviour
 {

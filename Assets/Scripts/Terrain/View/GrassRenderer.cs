@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
-using Math;
+using Core.Math;
 
 [RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
 public class GrassRenderer : MonoBehaviour

@@ -38,7 +38,22 @@ namespace Core.Math
         {
             return !(left == right);
         }
-
+        public static Coord3Int operator +(Coord3Int left, Coord3Int right)
+        {
+            return new Coord3Int(left.x + right.x, left.y + right.y, left.z + right.z);
+        }
+        public static Coord3Int operator -(Coord3Int left, Coord3Int right)
+        {
+            return new Coord3Int(left.x - right.x, left.y - right.y, left.z - right.z);
+        }
+        public static Coord3Int operator -(Coord3Int c)
+        {
+            return new Coord3Int(-c.x, -c.y, -c.z);
+        }
+        public static Coord3Int operator /(Coord3Int left, int right)
+        {
+            return new Coord3Int(left.x / right, left.y / right, left.z / right);
+        }
         public static Coord3Int operator *(Coord3Int left, int right)
         {
             return new Coord3Int(left.x * right, left.y * right, left.z * right);

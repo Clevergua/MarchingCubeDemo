@@ -1,4 +1,4 @@
-﻿using Math;
+﻿using Core.Math;
 using System.Collections.Generic;
 using UnityEngine;
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using NUnit.Framework;
+using Terrain;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -11,10 +12,11 @@ namespace Tests
         [Test]
         public void TerrainTestSimplePasses()
         {
-            var terrainSys = new TerrainGenerator();
+            var terrainGenerator = new TerrainGenerator();
             var temperateLayer = new TemperateLayer();
             Biome tropicalLayer = new TropicalLayer();
-            var layer = terrainSys.CreateLayer(0, 16, 4, 16, temperateLayer);
+            var layer = terrainGenerator.CreateLayer(0, 16, temperateLayer);
+            var a = Vector3.one * 6;
         }
 
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

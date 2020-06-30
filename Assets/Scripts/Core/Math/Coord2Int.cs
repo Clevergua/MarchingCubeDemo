@@ -48,6 +48,22 @@ namespace Core.Math
         {
             return !(left == right);
         }
+        public static Coord2Int operator +(Coord2Int left, Coord2Int right)
+        {
+            return new Coord2Int(left.x + right.x, left.y + right.y);
+        }
+        public static Coord2Int operator -(Coord2Int left, Coord2Int right)
+        {
+            return new Coord2Int(left.x - right.x, left.y - right.y);
+        }
+        public static Coord2Int operator -(Coord2Int c)
+        {
+            return new Coord2Int(-c.x, -c.y);
+        }
+        public static Coord2Int operator /(Coord2Int left, int right)
+        {
+            return new Coord2Int(left.x / right, left.y / right);
+        }
         public static Coord2Int operator *(Coord2Int left, int right)
         {
             return new Coord2Int(left.x * right, left.y * right);

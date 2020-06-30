@@ -6,10 +6,10 @@ namespace Terrain
 {
     public class TerrainGenerator
     {
-        public Layer CreateLayer(int seed, int worldLength, int worldHeight, Biome biome)
+        public Layer CreateLayer(int seed, int worldLength, Biome biome)
         {
             var length = worldLength * Constants.ChunkLength;
-            var height = worldHeight * Constants.ChunkLength;
+            var height = Constants.WorldHeight * Constants.ChunkLength;
             var coord2BlockID = new int[length, height, length];
             var coord2Island = new Island[worldLength, worldLength];
             var islands = FillCoord2Island(coord2Island, seed, biome);
@@ -18,32 +18,28 @@ namespace Terrain
                 for (int chunkZ = 0; chunkZ < worldLength; chunkZ++)
                 {
                     var island = coord2Island[chunkX, chunkZ];
-                    for (int chunkY = 0; chunkY < worldHeight; chunkY++)
+                    for (int chunkY = 0; chunkY < Constants.WorldHeight; chunkY++)
                     {
-                        var blocksOfChunk = island.GetCoord2BlockIDOfChunk(chunkX, chunkY, chunkZ, Constants.ChunkLength);
-                        FillCoord2BlockID(coord2BlockID, blocksOfChunk, chunkX, chunkY, chunkZ, Constants.ChunkLength);
+                        var blocksOfChunk = island.GetCoord2BlockIDOfChunk(chunkX, chunkY, chunkZ);
+                        FillCoord2BlockID(coord2BlockID, blocksOfChunk, chunkX, chunkY, chunkZ);
                     }
                 }
             }
             return new Layer(coord2BlockID, islands);
         }
 
-        public Layer CreateLayer(int v1, int v2, int v3, int v4, object biome)
-        {
-            throw new NotImplementedException();
-        }
 
-        private void FillCoord2BlockID(int[,,] coord2BlockID, int[,,] blocksOfChunk, int chunkX, int chunkY, int chunkZ, int chunkLength)
+        private void FillCoord2BlockID(int[,,] coord2BlockID, int[,,] blocksOfChunk, int chunkX, int chunkY, int chunkZ)
         {
-            for (int localBlockX = 0; localBlockX < chunkLength; localBlockX++)
+            for (int localBlockX = 0; localBlockX < Constants.ChunkLength; localBlockX++)
             {
-                for (int localBlockZ = 0; localBlockZ < chunkLength; localBlockZ++)
+                for (int localBlockZ = 0; localBlockZ < Constants.ChunkLength; localBlockZ++)
                 {
-                    for (int localBlockY = 0; localBlockY < chunkLength; localBlockY++)
+                    for (int localBlockY = 0; localBlockY < Constants.ChunkLength; localBlockY++)
                     {
-                        var blockX = chunkX * chunkLength + localBlockX;
-                        var blockY = chunkY * chunkLength + localBlockY;
-                        var blockZ = chunkZ * chunkLength + localBlockZ;
+                        var blockX = chunkX * Constants.ChunkLength + localBlockX;
+                        var blockY = chunkY * Constants.ChunkLength + localBlockY;
+                        var blockZ = chunkZ * Constants.ChunkLength + localBlockZ;
                         coord2BlockID[blockX, blockY, blockZ] = blocksOfChunk[localBlockX, localBlockY, localBlockZ];
                     }
                 }
