@@ -6,18 +6,18 @@ namespace Terrain
     {
         private static readonly int length = 2;
         internal override int Length { get { return length; } }
-
         protected override int[,,] GenerateCoord2BlockIDOfChunk(Coord3Int worldChunkCoord)
         {
             var worldCenterBlockCoord = SouthwestChunkCoord * Constants.ChunkLength + LocalCenterCoord;
             var coord2BlockOfChunk = new int[Constants.ChunkLength, Constants.ChunkLength, Constants.ChunkLength];
-            for (int blockX = 0; blockX < Constants.ChunkLength; blockX++)
+            for (int localBlockX = 0; localBlockX < Constants.ChunkLength; localBlockX++)
             {
-                for (int blockZ = 0; blockZ < Constants.ChunkLength; blockZ++)
+                for (int localBlockZ = 0; localBlockZ < Constants.ChunkLength; localBlockZ++)
                 {
-                    for (int blockY = 0; blockY < Constants.ChunkLength; blockY++)
+                    for (int localBlockY = 0; localBlockY < Constants.ChunkLength; localBlockY++)
                     {
-
+                        var worldBlockCoord = worldChunkCoord * Constants.ChunkLength + new Coord3Int(localBlockX, localBlockY, localBlockZ);
+                        
                     }
                 }
             }

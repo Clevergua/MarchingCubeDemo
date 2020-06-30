@@ -10,26 +10,28 @@ namespace Terrain
         {
             var length = worldLength * Constants.ChunkLength;
             var height = Constants.WorldHeight * Constants.ChunkLength;
-            var coord2BlockID = new int[length, height, length];
-            var coord2Island = new Island[worldLength, worldLength];
-            var islands = FillCoord2Island(coord2Island, seed, biome);
-            for (int chunkX = 0; chunkX < worldLength; chunkX++)
+            var blockmap = new int[length, height, length];
+            var islandmap = new Island[worldLength, worldLength];
+            var islands = FillIslandmap(islandmap, seed, biome);
+
+            for (int chunkx = 0; chunkx < worldLength; chunkx++)
             {
-                for (int chunkZ = 0; chunkZ < worldLength; chunkZ++)
+                for (int chunkz = 0; chunkz < worldLength; chunkz++)
                 {
-                    var island = coord2Island[chunkX, chunkZ];
-                    for (int chunkY = 0; chunkY < Constants.WorldHeight; chunkY++)
+                    var island = islandmap[chunkx, chunkz];
+                    var verticalChunkCoord = new Coord2Int(chunkx, chunkz);
+                    var verticalBlockmaps = island.GetVerticalBlockmaps(verticalChunkCoord, seed);
+                    for (int chunky = 0; chunky < Constants.WorldHeight; chunky++)
                     {
-                        var blocksOfChunk = island.GetCoord2BlockIDOfChunk(chunkX, chunkY, chunkZ);
-                        FillCoord2BlockID(coord2BlockID, blocksOfChunk, chunkX, chunkY, chunkZ);
+                        FillBlockmap(blockmap, verticalBlockmaps[chunky], chunkx, chunky, chunkz);
                     }
                 }
             }
-            return new Layer(coord2BlockID, islands);
+            return new Layer(blockmap, islands);
         }
 
 
-        private void FillCoord2BlockID(int[,,] coord2BlockID, int[,,] blocksOfChunk, int chunkX, int chunkY, int chunkZ)
+        private void FillBlockmap(int[,,] coord2BlockID, int[,,] blocksOfChunk, int chunkX, int chunkY, int chunkZ)
         {
             for (int localBlockX = 0; localBlockX < Constants.ChunkLength; localBlockX++)
             {
@@ -45,7 +47,7 @@ namespace Terrain
                 }
             }
         }
-        private IReadOnlyList<Island> FillCoord2Island(Island[,] coord2Island, int seed, Biome biome)
+        private IReadOnlyList<Island> FillIslandmap(Island[,] coord2Island, int seed, Biome biome)
         {
             var islands = new List<Island>();
 

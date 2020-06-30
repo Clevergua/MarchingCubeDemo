@@ -15,23 +15,26 @@ namespace Terrain
         }
         internal Coord2Int SouthwestChunkCoord { get; set; }
         internal abstract int Length { get; }
-        internal int[,,] GetCoord2BlockIDOfChunk(int x, int y, int z)
+
+        internal int[][,,] GetVerticalBlockmaps(Coord2Int verticalChunkCoord, int seed)
         {
-            if (ChunkCoordIsOutOfIslandRange(x, y, z))
+            if (VerticalChunkCoordIsOutOfIslandRange(verticalChunkCoord))
             {
-                throw new Exception($"Chunk coordinate:({x},{y},{z})is out of {GetType()} island range");
+                throw new Exception($"Chunk coordinate:({verticalChunkCoord.x},{verticalChunkCoord.y})is out of {GetType()} island range");
             }
             else
             {
-                var worldChunkCoord = new Coord3Int(x, y, z);
-                return GenerateCoord2BlockIDOfChunk(worldChunkCoord);
+                GenerateGenerateRawTerrainData();
+                return GenerateCoord2BlockIDOfChunk(verticalChunkCoord, seed);
             }
         }
 
-        protected abstract int[,,] GenerateCoord2BlockIDOfChunk(Coord3Int worldChunkCoord);
-        private bool ChunkCoordIsOutOfIslandRange(int x, int y, int z)
+        protected abstract int[][,,] GenerateCoord2BlockIDOfChunk(Coord2Int worldChunkCoord, int seed);
+        private bool VerticalChunkCoordIsOutOfIslandRange(Coord2Int chunkCoord)
         {
-            var result = x < SouthwestChunkCoord.x || y < SouthwestChunkCoord.y || x > SouthwestChunkCoord.x + Length || y > SouthwestChunkCoord.y + Length || y < 0 || y > Constants.WorldHeight;
+            var x = chunkCoord.x;
+            var z = chunkCoord.y;
+            var result = x < SouthwestChunkCoord.x || z < SouthwestChunkCoord.y || x > SouthwestChunkCoord.x + Length || z > SouthwestChunkCoord.y + Length;
             return result;
         }
     }
