@@ -20,29 +20,25 @@ namespace Terrain
                 {
                     var island = islandmap[chunkx, chunkz];
                     var verticalChunkCoord = new Coord2Int(chunkx, chunkz);
-                    var verticalBlockmaps = island.GetVerticalBlockmaps(verticalChunkCoord, seed);
-                    for (int chunky = 0; chunky < Constants.WorldHeight; chunky++)
-                    {
-                        FillBlockmap(blockmap, verticalBlockmaps[chunky], chunkx, chunky, chunkz);
-                    }
+                    var verticalBlockmap = island.GetVerticalBlockmap(verticalChunkCoord, seed);
+                    FillBlockmap(blockmap, verticalBlockmap, verticalChunkCoord);
                 }
             }
             return new Layer(blockmap, islands);
         }
 
 
-        private void FillBlockmap(int[,,] coord2BlockID, int[,,] blocksOfChunk, int chunkX, int chunkY, int chunkZ)
+        private void FillBlockmap(int[,,] coord2BlockID, int[,,] verticalBlockmap, Coord2Int verticalChunkCoord)
         {
-            for (int localBlockX = 0; localBlockX < Constants.ChunkLength; localBlockX++)
+            for (int localBlockx = 0; localBlockx < Constants.ChunkLength; localBlockx++)
             {
-                for (int localBlockZ = 0; localBlockZ < Constants.ChunkLength; localBlockZ++)
+                for (int localBlockz = 0; localBlockz < Constants.ChunkLength; localBlockz++)
                 {
-                    for (int localBlockY = 0; localBlockY < Constants.ChunkLength; localBlockY++)
+                    for (int worldBlocky = 0; worldBlocky < Constants.ChunkLength * Constants.WorldHeight; worldBlocky++)
                     {
-                        var blockX = chunkX * Constants.ChunkLength + localBlockX;
-                        var blockY = chunkY * Constants.ChunkLength + localBlockY;
-                        var blockZ = chunkZ * Constants.ChunkLength + localBlockZ;
-                        coord2BlockID[blockX, blockY, blockZ] = blocksOfChunk[localBlockX, localBlockY, localBlockZ];
+                        var worldBlockx = verticalChunkCoord.x * Constants.ChunkLength + localBlockx;
+                        var worldBlockz = verticalChunkCoord.y * Constants.ChunkLength + localBlockz;
+                        coord2BlockID[worldBlockx, worldBlocky, worldBlockz] = verticalBlockmap[localBlockx, worldBlocky, localBlockz];
                     }
                 }
             }
@@ -59,7 +55,7 @@ namespace Terrain
 
             var startingIsland = biome.GetStartingIsland(seed);
             var startingNECoord = new Coord2Int(coord2Island.GetLength(0) - 1 - startingIsland.Length, coord2Island.GetLength(1) - 1 - startingIsland.Length);
-            var startingCoord = new Coord2Int(startingNECoord.x * startingMask.x, startingNECoord.y * startingNECoord.y);
+            var startingCoord = new Coord2Int(startingNECoord.x * startingMask.x, startingNECoord.y * startingMask.y);
             if (TryAddIsland(coord2Island, startingIsland, startingCoord))
             {
                 islands.Add(startingIsland);
@@ -132,9 +128,9 @@ namespace Terrain
                 for (int z = coord.y; z < island.Length + coord.y; z++)
                 {
                     coord2Island[x, z] = island;
-                    island.SouthwestChunkCoord = new Coord2Int(x, z);
                 }
             }
+            island.SouthwestChunkCoord = coord;
             return true;
         }
     }

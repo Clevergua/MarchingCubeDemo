@@ -9,16 +9,18 @@ namespace Terrain
 
         internal override Island GetEndingIsland(int seed)
         {
-            throw new System.NotImplementedException();
+            return new PrairieCampIsland();
         }
 
         internal override Island GetStartingIsland(int seed)
         {
-            throw new System.NotImplementedException();
+            return new PrairieCampIsland();
         }
         internal override IEnumerable<Island> GetSpecialIslands(int seed)
         {
-            throw new System.NotImplementedException();
+            var list = new List<Island>();
+            //list.Add(new PrairieCampIsland());
+            return list;
         }
     }
 }
