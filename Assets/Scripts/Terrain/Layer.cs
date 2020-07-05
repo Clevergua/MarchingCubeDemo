@@ -4,22 +4,26 @@ namespace Terrain
 {
     public class Layer
     {
-        private int[,,] coord2BlockID;
+        private int[,,] blockmap;
+        private int[,] temperaturemap;
+        private int[,] humiditymap;
+        private int[,] structuremap;
+
         private IReadOnlyList<Island> islands;
 
-        public Layer(int[,,] coord2BlockID, IReadOnlyList<Island> islands)
+        public Layer(int[,,] blockmap, IReadOnlyList<Island> islands)
         {
-            this.coord2BlockID = coord2BlockID;
+            this.blockmap = blockmap;
             this.islands = islands;
         }
 
         internal int GetBlockID(int x, int y, int z)
         {
-            return coord2BlockID[x, y, z];
+            return blockmap[x, y, z];
         }
         internal int GetLength(int i)
         {
-            return coord2BlockID.GetLength(i);
+            return blockmap.GetLength(i);
         }
     }
 }
