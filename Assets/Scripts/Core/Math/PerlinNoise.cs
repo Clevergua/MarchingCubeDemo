@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-namespace Core.Math
+namespace Core
 {
     public class PerlinNoise
     {

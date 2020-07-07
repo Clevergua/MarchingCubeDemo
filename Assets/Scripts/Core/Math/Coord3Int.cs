@@ -1,5 +1,5 @@
 ﻿using System;
-namespace Core.Math
+namespace Core
 {
     public struct Coord3Int : IEquatable<Coord3Int>
     {

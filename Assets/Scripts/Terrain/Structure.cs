@@ -1,4 +1,4 @@
-﻿using Core.Math;
+﻿using Core;
 
 namespace Terrain
 {

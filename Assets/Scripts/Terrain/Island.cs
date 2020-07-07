@@ -1,4 +1,4 @@
-﻿using Core.Math;
+﻿using Core;
 using System;
 using UnityEngine;
 

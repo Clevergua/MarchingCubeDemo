@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Core.Math
+namespace Core
 {
     public struct Coord2Int : IEquatable<Coord2Int>
     {
