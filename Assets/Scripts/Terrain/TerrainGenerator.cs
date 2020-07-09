@@ -35,14 +35,31 @@ namespace Terrain
 
         private void FillTerritorymap(int seed, int[,] territorymap, List<Territory> id2Territory)
         {
-            //分布必须的领地
-            var necessaryTerritories = new List<Territory>();
+            var specialTerritoryTypes = new List<Type>();
+            var normalTerritoryTypes = new List<Type>();
 
-            necessaryTerritories.Add(new AdventurerTerritory());
-            necessaryTerritories.Add(new BossTerritory());
-            necessaryTerritories.Add(new CityTerritory());
+            var assembly = Assembly.GetExecutingAssembly();
+            foreach (var type in assembly.GetTypes())
+            {
+                if (type.IsSubclassOf(typeof(SpecialTerritory)))
+                {
+                    specialTerritoryTypes.Add(type);
+                }
+                else if (type.IsSubclassOf(typeof(NormalTerritory)))
+                {
+                    normalTerritoryTypes.Add(type);
+                }
+            }
 
-            foreach (var territory in necessaryTerritories)
+            //产生领地特殊集合
+            var specialTerritories = new List<SpecialTerritory>();
+            foreach (var type in specialTerritoryTypes)
+            {
+                var instance = Activator.CreateInstance(type);
+                specialTerritories.Add(instance as SpecialTerritory);
+            }
+            //分布特殊的领地
+            foreach (var territory in specialTerritories)
             {
                 var numOfAttempts = 0;
                 while (true)
@@ -58,38 +75,42 @@ namespace Terrain
                     }
                 }
             }
-            //分布其他的领地
 
-            var normalTerritories = GetNormalTerritories(seed);
-
-
-        }
-
-        private List<Territory> GetNormalTerritories(int seed)
-        {
-            var normalTerritories = new List<Territory>();
-            var count = Mathf.Abs(RNG.Random1(568731, seed) % Constants.MaxNormalTerritoryCount - Constants.MinNormalTerritoryCount) + Constants.MinNormalTerritoryCount;
+            //产生领地集合
+            var normalTerritories = new List<NormalTerritory>();
+            var count = Mathf.Abs(RNG.Random1(8731, seed) % Constants.MaxNormalTerritoryCount - Constants.MinNormalTerritoryCount) + Constants.MinNormalTerritoryCount;
             for (int i = 0; i < count; i++)
             {
-                var r = GetNextRandomInt(seed);
-                var territory = CreateNoramlTerritory(r);
-                normalTerritories.Add(territory);
+                var index = Mathf.Abs(GetNextRandomInt(seed) % normalTerritoryTypes.Count);
+                var type = normalTerritoryTypes[index];
+                var instance = Activator.CreateInstance(type) as NormalTerritory;
+                normalTerritories.Add(instance);
             }
-            return normalTerritories;
-        }
-
-        private Territory CreateNoramlTerritory(int randomValue)
-        {
-            var index = 0;
-            var normalTerritoryTypes = new List<Type>()
+            //按范围从大到小排列
+            normalTerritories.Sort((left, right) =>
             {
-                typeof() 
-            };
-            Activator.CreateInstance(normalTerritoryTypes[index]);
+                return right.Range - left.Range;
+            });
+            //分布普通领地
+            foreach (var territory in specialTerritories)
+            {
+                var numOfAttempts = 0;
+                while (true)
+                {
+                    numOfAttempts++;
+                    if (numOfAttempts < 256)
+                    {
+                        if (TrySetTerritory(territory, territorymap, id2Territory, seed)) { break; }
+                    }
+                    else
+                    {
+                        throw new Exception("The map is too small");
+                    }
+                }
+            }  
 
 
-            return null;
-        }
+
 
         private bool TrySetTerritory(Territory territory, int[,] territorymap, List<Territory> id2Territory, int seed)
         {

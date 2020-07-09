@@ -8,7 +8,6 @@ namespace Terrain
     {
         private static readonly int length = 2;
         internal override int Length { get { return length; } }
-
         protected override int[,,] GenerateVerticalBlockmap(Coord2Int worldChunkCoord, int seed, int[,] heightmap)
         {
             var verticalBlockmap = new int[Constants.ChunkLength, Constants.ChunkLength * Constants.WorldHeight, Constants.ChunkLength];
