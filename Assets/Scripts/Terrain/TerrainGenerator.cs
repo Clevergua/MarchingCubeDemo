@@ -1,6 +1,7 @@
 ﻿using Core;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace Terrain
@@ -8,6 +9,7 @@ namespace Terrain
     public class TerrainGenerator
     {
         private int previousRandomNum;
+
         public Layer CreateLayer(int seed, int worldLength, Biome biome)
         {
             var length = worldLength * Constants.ChunkLength;
@@ -65,14 +67,28 @@ namespace Terrain
 
         private List<Territory> GetNormalTerritories(int seed)
         {
-            var r = RNG.Random1(568731, seed);
-            var count = Mathf.Abs(r % Constants.MaxNormalTerritoryCount - Constants.MinNormalTerritoryCount) + Constants.MinNormalTerritoryCount;
+            var normalTerritories = new List<Territory>();
+            var count = Mathf.Abs(RNG.Random1(568731, seed) % Constants.MaxNormalTerritoryCount - Constants.MinNormalTerritoryCount) + Constants.MinNormalTerritoryCount;
             for (int i = 0; i < count; i++)
             {
-                NormalTerritoryLibrary
-                var index = 
-                
+                var r = GetNextRandomInt(seed);
+                var territory = CreateNoramlTerritory(r);
+                normalTerritories.Add(territory);
             }
+            return normalTerritories;
+        }
+
+        private Territory CreateNoramlTerritory(int randomValue)
+        {
+            var index = 0;
+            var normalTerritoryTypes = new List<Type>()
+            {
+                typeof() 
+            };
+            Activator.CreateInstance(normalTerritoryTypes[index]);
+
+
+            return null;
         }
 
         private bool TrySetTerritory(Territory territory, int[,] territorymap, List<Territory> id2Territory, int seed)
