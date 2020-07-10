@@ -1,7 +1,8 @@
 ﻿namespace Terrain
 {
-    internal class AdventurerTerritory : SpecialTerritory
+    internal class GoblinTerritory : NormalTerritory
     {
         public override int Range { get { return 64; } }
     }
+
 }

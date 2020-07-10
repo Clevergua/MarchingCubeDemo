@@ -1,4 +1,6 @@
-﻿namespace Core
+﻿using System;
+
+namespace Core
 {
     public static class RNG
     {
@@ -9,16 +11,16 @@
         public static int Random1(int x, int seed)
         {
             int value = seed;
-            value ^= X_PRIME * x;
-            value = value * value * value * 2377;
+            value ^= X_PRIME * x + X_PRIME;
+            value = value * value * value * 72377;
             value = value >> 23 ^ value;
             return value;
         }
         public static int Random2(int x, int y, int seed)
         {
             int value = seed;
-            value ^= X_PRIME * x;
-            value ^= Y_PRIME * y;
+            value ^= X_PRIME * x + X_PRIME;
+            value ^= Y_PRIME * y - Y_PRIME;
             value = value * value * value * 7547;
             value = value >> 17 ^ value;
             return value;
@@ -26,9 +28,9 @@
         public static int Random3(int x, int y, int z, int seed)
         {
             int value = seed;
-            value ^= X_PRIME * x;
-            value ^= Y_PRIME * y;
-            value ^= Z_PRIME * z;
+            value ^= X_PRIME * x - X_PRIME;
+            value ^= Y_PRIME * y + Y_PRIME;
+            value ^= Z_PRIME * z - Z_PRIME;
             value = value * value * value * 7547;
             value = value >> 11 ^ value;
             return value;

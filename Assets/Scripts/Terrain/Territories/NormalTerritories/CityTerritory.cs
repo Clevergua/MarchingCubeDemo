@@ -1,6 +1,6 @@
 ﻿namespace Terrain
 {
-    internal class BossTerritory : SpecialTerritory
+    internal class CityTerritory : NormalTerritory
     {
         public override int Range { get { return 128; } }
     }

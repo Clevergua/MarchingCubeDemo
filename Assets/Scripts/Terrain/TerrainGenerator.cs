@@ -1,6 +1,7 @@
 ﻿using Core;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -10,7 +11,7 @@ namespace Terrain
     {
         private int previousRandomNum;
 
-        public Layer CreateLayer(int seed, int worldLength, Biome biome)
+        public Layer CreateLayer(int seed, int worldLength)
         {
             var length = worldLength * Constants.ChunkLength;
             var height = Constants.WorldHeight * Constants.ChunkLength;
@@ -19,22 +20,69 @@ namespace Terrain
             var temperaturemap = new int[length, length];
             var humiditymap = new int[length, length];
 
-            var structuremap = new int[length, length];
-            var structures = new List<Structure>();
-            var blockmap = new int[length, height, length];
-
             FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
-
             var territorymap = new int[length, length];
             var id2Territory = new List<Territory>();
 
-            FillTerritorymap(seed, territorymap, id2Territory);
+            var territorySeed = seed;
+            while (!TryFillTerritorymap(territorySeed, territorymap, id2Territory))
+            {
+                territorySeed++;
+            }
 
+            var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
+
+            var territoryType2Color = new Dictionary<Type, Color>();
+            foreach (var item in id2Territory)
+            {
+                var t = item.GetType();
+                if (!territoryType2Color.ContainsKey(t))
+                {
+                    var c = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
+                    territoryType2Color.Add(t, c);
+                }
+            }
+
+            // set the pixel values
+            for (int x = 0; x < length; x++)
+            {
+                for (int y = 0; y < length; y++)
+                {
+                    var index = territorymap[x, y];
+                    if (index == -1)
+                    {
+                        var c = new Color((float)temperaturemap[x, y] / 100, 0, 0);
+                        texture.SetPixel(x, y, c);
+                    }
+                    else 
+                    {
+                        texture.SetPixel(x, y, territoryType2Color[id2Territory[index].GetType()]);
+                    }
+
+                }
+            }
+
+            // Apply all SetPixel calls
+            texture.Apply();
+
+            byte[] bytes = texture.EncodeToPNG();
+            System.IO.File.WriteAllBytes($"{Application.dataPath}/aa.png", bytes);
             return new Layer(null, null);
         }
 
-        private void FillTerritorymap(int seed, int[,] territorymap, List<Territory> id2Territory)
+        private bool TryFillTerritorymap(int seed, int[,] territorymap, List<Territory> id2Territory)
         {
+            var success = true;
+            //重置
+            for (int x = 0; x < territorymap.Length; x++)
+            {
+                for (int y = 0; y < territorymap.Length; y++)
+                {
+                    territorymap[x, y] = -1;
+                }
+            }
+            id2Territory.Clear();
+
             var specialTerritoryTypes = new List<Type>();
             var normalTerritoryTypes = new List<Type>();
 
@@ -65,17 +113,17 @@ namespace Terrain
                 while (true)
                 {
                     numOfAttempts++;
-                    if (numOfAttempts < 256)
+                    if (numOfAttempts < 512)
                     {
                         if (TrySetTerritory(territory, territorymap, id2Territory, seed)) { break; }
                     }
                     else
                     {
-                        throw new Exception("The map is too small");
+                        Debug.Log("The map is too small");
+                        return false;
                     }
                 }
             }
-
             //产生领地集合
             var normalTerritories = new List<NormalTerritory>();
             var count = Mathf.Abs(RNG.Random1(8731, seed) % Constants.MaxNormalTerritoryCount - Constants.MinNormalTerritoryCount) + Constants.MinNormalTerritoryCount;
@@ -92,13 +140,13 @@ namespace Terrain
                 return right.Range - left.Range;
             });
             //分布普通领地
-            foreach (var territory in specialTerritories)
+            foreach (var territory in normalTerritories)
             {
                 var numOfAttempts = 0;
                 while (true)
                 {
                     numOfAttempts++;
-                    if (numOfAttempts < 256)
+                    if (numOfAttempts < 1024)
                     {
                         if (TrySetTerritory(territory, territorymap, id2Territory, seed)) { break; }
                     }
@@ -107,10 +155,10 @@ namespace Terrain
                         throw new Exception("The map is too small");
                     }
                 }
-            }  
+            }
 
-
-
+            return success;
+        }
 
         private bool TrySetTerritory(Territory territory, int[,] territorymap, List<Territory> id2Territory, int seed)
         {
@@ -119,8 +167,10 @@ namespace Terrain
             var length = territorymap.GetLength(0);
             var range = territory.Range;
             var rangeCount = (length - 2 * range);
-            var cx = Math.Abs(GetNextRandomInt(seed) % rangeCount) + range;
-            var cy = Math.Abs(GetNextRandomInt(seed) % rangeCount) + range;
+            var vx = GetNextRandomInt(seed);
+            var vy = GetNextRandomInt(seed);
+            var cx = Math.Abs(vx % rangeCount) + range;
+            var cy = Math.Abs(vy % rangeCount) + range;
             for (int x = cx - range; x < cx + range; x++)
             {
                 for (int y = cy - range; y < cy + range; y++)
@@ -130,7 +180,7 @@ namespace Terrain
                     //If within range
                     if (range * range <= dx * dx + dy * dy)
                     {
-                        if (territorymap[x, y] == 0)
+                        if (territorymap[x, y] == -1)
                         {
                             //Do nothing
                         }
@@ -153,7 +203,7 @@ namespace Terrain
                         var dx = x - cx;
                         var dy = y - cy;
                         //If within range
-                        if (range * range <= dx * dx + dy * dy)
+                        if (dx * dx + dy * dy <= range * range)
                         {
                             territorymap[x, y] = index;
                         }
@@ -164,14 +214,13 @@ namespace Terrain
             {
                 //Do nothing
             }
-
             return success;
         }
 
         private int GetNextRandomInt(int seed)
         {
             var value = RNG.Random1(previousRandomNum, seed);
-            previousRandomNum = value * value * value - 779789777 << 6585;
+            previousRandomNum = value;
             return value;
         }
 
@@ -185,11 +234,11 @@ namespace Terrain
                     var heightNoise = PerlinNoise.PerlinNoise2D(seed + 1232, x * heightNoiseDensity, z * heightNoiseDensity) * 0.5f + 0.5f;
                     heightmap[x, z] = (int)(Mathf.Lerp(Constants.MinHeight, Constants.MaxHeight, heightNoise));
 
-                    var temperatureNoiseDensity = 0.0007f;
+                    var temperatureNoiseDensity = 0.0011f;
                     var temperatureNoise = PerlinNoise.PerlinNoise2D(seed + 8674, x * temperatureNoiseDensity, z * temperatureNoiseDensity) * 0.5f + 0.5f;
                     temperaturemap[x, z] = (int)(Mathf.Lerp(Constants.MinTemperature, Constants.MaxTemperature, temperatureNoise));
 
-                    var humidityNoiseDensity = 0.0007f;
+                    var humidityNoiseDensity = 0.0011f;
                     var humidityNoise = PerlinNoise.PerlinNoise2D(seed + 96, x * humidityNoiseDensity, z * humidityNoiseDensity) * 0.5f + 0.5f;
                     humiditymap[x, z] = (int)(Mathf.Lerp(Constants.MinHumidity, Constants.MaxHumidity, humidityNoise));
                 }

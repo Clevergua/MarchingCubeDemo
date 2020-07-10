@@ -1,7 +1,7 @@
 ﻿namespace Terrain
 {
-    internal class Territory
+    internal abstract class Territory
     {
-        public int Range { get; private set; }
+        public abstract int Range { get; }
     }
 }
