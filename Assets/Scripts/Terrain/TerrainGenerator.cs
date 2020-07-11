@@ -14,22 +14,34 @@ namespace Terrain
         public Layer CreateLayer(int seed, int worldLength)
         {
             var length = worldLength * Constants.ChunkLength;
-            var height = Constants.WorldHeight * Constants.ChunkLength;
-
+            //var height = Constants.WorldHeight * Constants.ChunkLength;
             var heightmap = new int[length, length];
             var temperaturemap = new int[length, length];
             var humiditymap = new int[length, length];
 
             FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
+
             var territorymap = new int[length, length];
             var id2Territory = new List<Territory>();
-
             var territorySeed = seed;
+
             while (!TryFillTerritorymap(territorySeed, territorymap, id2Territory))
             {
                 territorySeed++;
             }
+            var times = territorySeed - seed + 1;
+            if (times < 3)
+            {
+                Debug.Log($"Try to fill the territory {times} times");
+            }
+            else
+            {
+                Debug.LogWarning($"Try to fill the territory {times} times");
+            }
 
+
+
+            #region 生成图片查看结果
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
 
             var territoryType2Color = new Dictionary<Type, Color>();
@@ -42,7 +54,6 @@ namespace Terrain
                     territoryType2Color.Add(t, c);
                 }
             }
-
             // set the pixel values
             for (int x = 0; x < length; x++)
             {
@@ -54,19 +65,19 @@ namespace Terrain
                         var c = new Color((float)temperaturemap[x, y] / 100, 0, 0);
                         texture.SetPixel(x, y, c);
                     }
-                    else 
+                    else
                     {
                         texture.SetPixel(x, y, territoryType2Color[id2Territory[index].GetType()]);
                     }
 
                 }
             }
-
             // Apply all SetPixel calls
             texture.Apply();
-
             byte[] bytes = texture.EncodeToPNG();
             System.IO.File.WriteAllBytes($"{Application.dataPath}/aa.png", bytes);
+            #endregion
+
             return new Layer(null, null);
         }
 
@@ -146,20 +157,20 @@ namespace Terrain
                 while (true)
                 {
                     numOfAttempts++;
-                    if (numOfAttempts < 1024)
+                    if (numOfAttempts < 512)
                     {
                         if (TrySetTerritory(territory, territorymap, id2Territory, seed)) { break; }
                     }
                     else
                     {
-                        throw new Exception("The map is too small");
+                        Debug.Log("The map is too small");
+                        success = false;
                     }
                 }
             }
 
             return success;
         }
-
         private bool TrySetTerritory(Territory territory, int[,] territorymap, List<Territory> id2Territory, int seed)
         {
             var success = true;
@@ -216,14 +227,12 @@ namespace Terrain
             }
             return success;
         }
-
         private int GetNextRandomInt(int seed)
         {
             var value = RNG.Random1(previousRandomNum, seed);
             previousRandomNum = value;
             return value;
         }
-
         private void FillEnvironmentalmaps(int seed, int length, int[,] heightmap, int[,] temperaturemap, int[,] humiditymap)
         {
             for (int x = 0; x < length; x++)
