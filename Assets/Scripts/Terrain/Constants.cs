@@ -18,8 +18,11 @@ namespace Terrain
 
         public static readonly int LayerEdgeWidth = 32;
 
-        public static readonly int MinNormalTerritoryCount = 10;
-        public static readonly int MaxNormalTerritoryCount = 15;
+        public static readonly int MinNormalTerritoryCount = 8;
+        public static readonly int MaxNormalTerritoryCount = 12;
 
+        public static readonly int PathRange = 8;
+
+        public static readonly int NoiseImpactRange = 16;
     }
 }
