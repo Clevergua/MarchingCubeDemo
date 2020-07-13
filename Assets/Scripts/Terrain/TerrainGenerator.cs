@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 namespace Terrain
 {
@@ -13,6 +14,8 @@ namespace Terrain
         public Layer CreateLayer(int seed, int worldLength)
         {
             var length = worldLength * Constants.ChunkLength;
+            var height = Constants.WorldHeight * Constants.ChunkLength;
+
             //高度图
             var heightmap = new int[length, length];
             //温度图
@@ -38,45 +41,42 @@ namespace Terrain
             var times = territorySeed - seed + 1;
             Debug.Log($"Try to fill the territory {times} times");
 
-            var paths = CreatePaths(territorymap, id2Territory);
-            var pathmap = new int[length, length];
-            FillPathmap(pathmap, paths, territorymap);
+            //路径信息
+            var paths = GeneratePaths(id2Territory, territorymap);
+            var coord2MinDistanceFromPath = GetCoord2MinDistanceFromPath(paths, length, height, heightmap);
+
+            var blockmap = new int[length, height, length];
+            for (int x = 0; x < length; x++)
+            {
+                for (int z = 0; z < length; z++)
+                {
+                    var curHeight = heightmap[x, z];
+                    for (int y = 0; y < height; y++)
+                    {
+                        //使用时候factor范围为0-1
+
+                        //高度差为0的时:factor = 1
+                        //高度差达到NoiseImpactRange时:factor = 0
+                        //更大差值时候:factor < 0
+                        var heightDifference = Mathf.Abs(y - curHeight);
+                        var heightFactor = ((float)Constants.NoiseImpactRange - heightDifference) / Constants.NoiseImpactRange;
+
+                        //在领地中心为:territoryFactor = 0;
+                        //距离领地距离达到Range时:territoryFactor = 1;
+                        //更远距离时候:territoryFactor > 1
+                        var territory = id2Territory[territorymap[x, z]];
+                        var territoryRange = territory.Range;
+                        var territoryCenter = territory.CenterCoord;
+                        var disSquare = (x - territoryCenter.x) * (x - territoryCenter.x) + (y - curHeight) * (y - curHeight) + (z - territoryCenter.y) * (z - territoryCenter.y);
+                        var territoryFactor = (float)disSquare / (territoryRange * territoryRange);
 
 
-            //var height = Constants.WorldHeight * Constants.ChunkLength;
-            //var blockmap = new int[length, height, length];
-            //for (int x = 0; x < length; x++)
-            //{
-            //    for (int z = 0; z < length; z++)
-            //    {
-            //        var curHeight = heightmap[x, z];
-            //        for (int y = 0; y < height; y++)
-            //        {
-            //            //使用时候factor范围为0-1
+                        //通过coord2MinDistanceFromPath查找并影响权重
 
 
-            //            //高度差为0的时:factor = 1
-            //            //高度差达到NoiseImpactRange时:factor = 0
-            //            //更大差值时候:factor < 0
-            //            var heightDifference = Mathf.Abs(y - curHeight);
-            //            var heightFactor = ((float)Constants.NoiseImpactRange - heightDifference) / Constants.NoiseImpactRange;
-
-            //            //在领地中心为:territoryFactor = 0;
-            //            //距离领地距离达到Range时:territoryFactor = 1;
-            //            //更远距离时候:territoryFactor > 1
-            //            var territory = id2Territory[territorymap[x, z]];
-            //            var territoryRange = territory.Range;
-            //            var territoryCenter = territory.CenterCoord;
-            //            var disSquare = (x - territoryCenter.x) * (x - territoryCenter.x) + (y - curHeight) * (y - curHeight) + (z - territoryCenter.y) * (z - territoryCenter.y);
-            //            var territoryFactor = (float)disSquare / (territoryRange * territoryRange);
-
-
-            //            //
-
-
-            //        }
-            //    }
-            //}
+                    }
+                }
+            }
 
             #region 生成图片查看结果
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
@@ -100,15 +100,15 @@ namespace Terrain
                     var index = territorymap[x, y];
                     if (index == -1)
                     {
-                        if (pathmap[x, y] != -1)
-                        {
-                            texture.SetPixel(x, y, Color.green);
-                        }
-                        else
-                        {
-                            var c = new Color((float)temperaturemap[x, y] / 100, 0, 0);
-                            texture.SetPixel(x, y, c);
-                        }
+                        //if (pathmap[x, y] != -1)
+                        //{
+                        //    texture.SetPixel(x, y, Color.green);
+                        //}
+                        //else
+                        //{
+                        var c = new Color((float)temperaturemap[x, y] / 100, 0, 0);
+                        texture.SetPixel(x, y, c);
+                        //}
                     }
                     else
                     {
@@ -126,50 +126,69 @@ namespace Terrain
             return new Layer(null, null);
         }
 
-        private void FillPathmap(int[,] pathmap, IReadOnlyList<Path> paths, int[,] territorymap)
+        private IReadOnlyDictionary<Coord3Int, int> GetCoord2MinDistanceFromPath(IReadOnlyList<Path> paths, int length, int height, int[,] heightmap)
         {
-            for (int x = 0; x < pathmap.GetLength(0); x++)
-            {
-                for (int z = 0; z < pathmap.GetLength(1); z++)
-                {
-                    pathmap[x, z] = -1;
-                }
-            }
-            //对于每条路径使用A*算法
+            var coord2MinDistanceFromPath = new Dictionary<Coord3Int, int>();
             for (int i = 0; i < paths.Count; i++)
             {
-                var curPath = paths[i];
-                var coordsOnPath = GenerateCoordsOnPathByAStar(curPath, territorymap);
-                foreach (var coord in coordsOnPath)
+                var path = paths[i];
+                foreach (var coord2 in path.Coords)
                 {
-                    pathmap[coord.x, coord.y] = i;
-                    var minx = coord.x - Constants.PathRange < 0 ? 0 : coord.x - Constants.PathRange;
-                    var maxx = coord.x + Constants.PathRange > pathmap.GetLength(0) ? pathmap.GetLength(0) : coord.x + Constants.PathRange;
-                    var miny = coord.y - Constants.PathRange < 0 ? 0 : coord.y - Constants.PathRange;
-                    var maxy = coord.y + Constants.PathRange > pathmap.GetLength(1) ? pathmap.GetLength(1) : coord.y + Constants.PathRange;
-                    for (int x = minx; x < maxx; x++)
+                    var center = new Coord3Int(coord2.x, heightmap[coord2.x, coord2.y], coord2.y);
+
+                    //限制min,max避免越界
+                    var minx = center.x - Constants.PathRange < 0 ? 0 : center.x - Constants.PathRange;
+                    var miny = center.y - Constants.PathRange < 0 ? 0 : center.y - Constants.PathRange;
+                    var minz = center.z - Constants.PathRange < 0 ? 0 : center.z - Constants.PathRange;
+
+                    var maxx = center.x + Constants.PathRange < length ? center.x + Constants.PathRange : length - 1;
+                    var maxy = center.y + Constants.PathRange < height ? center.y + Constants.PathRange : height - 1;
+                    var maxz = center.z + Constants.PathRange < length ? center.z + Constants.PathRange : length - 1;
+
+                    for (int x = minx; x <= maxx; x++)
                     {
                         for (int y = miny; y < maxy; y++)
                         {
-                            var disSquare = (coord.x - x) * (coord.x - x) + (coord.y - y) * (coord.y - y);
-                            if (disSquare < Constants.PathRange)
+                            for (int z = minz; z < maxz; z++)
                             {
-                                pathmap[x, y] = i;
+                                var current = new Coord3Int(x, y, z);
+                                var distance = ManhattanDistance3D(center, current);
+                                if (distance < Constants.PathRange)
+                                {
+                                    if (coord2MinDistanceFromPath.ContainsKey(current))
+                                    {
+                                        if (distance < coord2MinDistanceFromPath[current])
+                                        {
+                                            coord2MinDistanceFromPath[current] = distance;
+                                        }
+                                        else
+                                        {
+                                            //较大值抛弃
+                                        }
+                                    }
+                                    else
+                                    {
+                                        coord2MinDistanceFromPath.Add(current, distance);
+                                    }
+                                }
+                                else
+                                {
+                                    //范围外部的抛弃
+                                }
                             }
                         }
                     }
                 }
             }
+            return coord2MinDistanceFromPath;
         }
-        private IReadOnlyList<Coord2Int> GenerateCoordsOnPathByAStar(Path path, int[,] territorymap)
-        {
-            var start = path.Departure.CenterCoord;
-            var goal = path.Destination.CenterCoord;
 
+        private IReadOnlyList<Coord2Int> GenerateCoordsOnPathByAStar(Coord2Int start, Coord2Int goal, int[,] territorymap)
+        {
             var coordOpenSet = new HashSet<Coord2Int>() { start };
             var coord2CameFrom = new Dictionary<Coord2Int, Coord2Int>();
             var coord2GScore = new Dictionary<Coord2Int, int>() { { start, 0 } };
-            var coord2FScore = new Dictionary<Coord2Int, int>() { { start, ManhattanDistance(start, goal) } };
+            var coord2FScore = new Dictionary<Coord2Int, int>() { { start, ManhattanDistance2D(start, goal) } };
 
             var startTerritoryIndex = territorymap[start.x, start.y];
             var goalTerritoryIndex = territorymap[goal.x, goal.y];
@@ -239,9 +258,9 @@ namespace Terrain
                                             coord2GScore.Add(neighbor, tentativeGScore);
 
                                         if (coord2FScore.ContainsKey(neighbor))
-                                            coord2FScore[neighbor] = tentativeGScore + ManhattanDistance(neighbor, goal);
+                                            coord2FScore[neighbor] = tentativeGScore + ManhattanDistance2D(neighbor, goal);
                                         else
-                                            coord2FScore.Add(neighbor, tentativeGScore + ManhattanDistance(neighbor, goal));
+                                            coord2FScore.Add(neighbor, tentativeGScore + ManhattanDistance2D(neighbor, goal));
 
                                         if (!coordOpenSet.Contains(neighbor))
                                         {
@@ -261,11 +280,15 @@ namespace Terrain
             }
             throw new Exception("Open set is empty but goal was never reached!");
         }
-        private int ManhattanDistance(Coord2Int start, Coord2Int goal)
+        private int ManhattanDistance2D(Coord2Int start, Coord2Int goal)
         {
             return Mathf.Abs(start.x - goal.x) + Mathf.Abs(start.y - goal.y);
         }
-        private IReadOnlyList<Path> CreatePaths(int[,] territorymap, IReadOnlyList<Territory> id2Territory)
+        private int ManhattanDistance3D(Coord3Int start, Coord3Int goal)
+        {
+            return Mathf.Abs(start.x - goal.x) + Mathf.Abs(start.y - goal.y) + Mathf.Abs(start.z - goal.z);
+        }
+        private IReadOnlyList<Path> GeneratePaths(IReadOnlyList<Territory> id2Territory, int[,] territorymap)
         {
             var paths = new List<Path>();
 
@@ -290,11 +313,12 @@ namespace Terrain
                     }
                 }
             }
+            unmarkedTerritories.Add(bossTerritory);
             while (unmarkedTerritories.Count > 0)
             {
                 var currentMarkedTerritory = markedTerritories[markedTerritories.Count - 1];
                 var minDistance = int.MaxValue;
-                Territory minDisUnmarkedTerritory = null;
+                Territory destination = null;
                 var minDisUnmarkedTerritoryIndex = -1;
                 for (int i = 0; i < unmarkedTerritories.Count; i++)
                 {
@@ -302,29 +326,28 @@ namespace Terrain
                     var distance = Mathf.Abs(currentMarkedTerritory.CenterCoord.x - unmarkedTerritory.CenterCoord.x) + Mathf.Abs(currentMarkedTerritory.CenterCoord.y - unmarkedTerritory.CenterCoord.y);
                     if (distance < minDistance)
                     {
-                        minDisUnmarkedTerritory = unmarkedTerritory;
+                        destination = unmarkedTerritory;
                         minDisUnmarkedTerritoryIndex = i;
                         minDistance = distance;
                     }
                 }
 
                 minDistance = int.MaxValue;
-                Territory minDisMarkedTerritory = null;
+                Territory departure = null;
                 foreach (var markedTerritory in markedTerritories)
                 {
-                    var distance = Mathf.Abs(markedTerritory.CenterCoord.x - minDisUnmarkedTerritory.CenterCoord.x) + Mathf.Abs(markedTerritory.CenterCoord.y - minDisUnmarkedTerritory.CenterCoord.y);
+                    var distance = Mathf.Abs(markedTerritory.CenterCoord.x - destination.CenterCoord.x) + Mathf.Abs(markedTerritory.CenterCoord.y - destination.CenterCoord.y);
                     if (distance < minDistance)
                     {
-                        minDisMarkedTerritory = markedTerritory;
+                        departure = markedTerritory;
                         minDistance = distance;
                     }
                 }
 
-
-                markedTerritories.Add(minDisUnmarkedTerritory);
+                markedTerritories.Add(destination);
                 unmarkedTerritories.RemoveAt(minDisUnmarkedTerritoryIndex);
-
-                paths.Add(new Path(minDisMarkedTerritory, minDisUnmarkedTerritory));
+                var coords = GenerateCoordsOnPathByAStar(departure.CenterCoord, destination.CenterCoord, territorymap);
+                paths.Add(new Path(departure, destination, coords));
             }
             return paths;
         }
