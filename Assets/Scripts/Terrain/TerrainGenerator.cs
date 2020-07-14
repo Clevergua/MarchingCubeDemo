@@ -54,6 +54,8 @@ namespace Terrain
                     for (int y = 0; y < height; y++)
                     {
                         //使用时候factor范围为0-1
+                        //factor * noise
+                        var currentCoord = new Coord3Int(x, y, z);
 
                         //高度差为0的时:factor = 1
                         //高度差达到NoiseImpactRange时:factor = 0
@@ -70,10 +72,27 @@ namespace Terrain
                         var disSquare = (x - territoryCenter.x) * (x - territoryCenter.x) + (y - curHeight) * (y - curHeight) + (z - territoryCenter.y) * (z - territoryCenter.y);
                         var territoryFactor = (float)disSquare / (territoryRange * territoryRange);
 
-
                         //通过coord2MinDistanceFromPath查找并影响权重
+                        //距离道路为0时:pathFactor = 0
+                        //距离道路为Range时:pathFactor = 1
+                        //超出距离时:pathFactor = 1
+                        var pathFactor = 0f;
+                        if (coord2MinDistanceFromPath.ContainsKey(currentCoord))
+                        {
+                            //dis最小值为0 最大值Constants.PathRange
+                            var dis = coord2MinDistanceFromPath[currentCoord];
+                            pathFactor = (float)dis / Constants.PathRange;
+                        }
+                        else
+                        {
+                            pathFactor = 1;
+                        }
 
-
+                        //获取最小值的factory
+                        var factor = float.MaxValue;
+                        var factors = new float[] { heightFactor, territoryFactor, pathFactor };
+                        foreach (var f in factors) { if (f < factor) factor = f; }
+                        factor = Mathf.Clamp(0, 1, factor);
                     }
                 }
             }
@@ -153,7 +172,7 @@ namespace Terrain
                             {
                                 var current = new Coord3Int(x, y, z);
                                 var distance = ManhattanDistance3D(center, current);
-                                if (distance < Constants.PathRange)
+                                if (distance <= Constants.PathRange)
                                 {
                                     if (coord2MinDistanceFromPath.ContainsKey(current))
                                     {
