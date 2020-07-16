@@ -1,21 +1,27 @@
 ﻿using System.Collections;
 using Terrain;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameLoop : MonoBehaviour
 {
     private int seed;
     private Layer l;
+    TerrainGenerator terrainGen;
+    [SerializeField] Text text;
+
     // Start is called before the first frame update
     void Start()
     {
         //Create level
-        var terrainGen = new TerrainGenerator();
+        terrainGen = new TerrainGenerator();
         var seed = Random.Range(int.MinValue, int.MaxValue);
-        Debug.Log(seed);
-        l = terrainGen.CreateLayer(0, 32);
-        StartCoroutine(Show());
-
+        StartCoroutine(terrainGen.GenerateLayer(0, 64, () =>
+        {
+            l = terrainGen.result;
+            StartCoroutine(Show());
+        }));
     }
     IEnumerator Show()
     {
@@ -49,7 +55,7 @@ public class GameLoop : MonoBehaviour
     }
     private void Update()
     {
-
+        text.text = $"{terrainGen.currentOperation}::{terrainGen.progress}";
 
     }
 }

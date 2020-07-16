@@ -23,6 +23,6 @@ namespace Terrain
 
         public static readonly int PathRange = 8;
 
-        public static readonly int NoiseImpactRange = 16;
+        public static readonly int HeightNoiseImpactRange = 12;
     }
 }

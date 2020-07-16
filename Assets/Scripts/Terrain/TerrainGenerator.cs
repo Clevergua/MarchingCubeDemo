@@ -1,18 +1,24 @@
 ﻿using Core;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.SocialPlatforms;
 
 namespace Terrain
 {
     public class TerrainGenerator
     {
-        private int previousRandomNum;
+        public int progress { get; private set; }
+        public Layer result { get; private set; }
 
-        public Layer CreateLayer(int seed, int worldLength)
+        public string currentOperation { get; private set; }
+        public bool isDone { get; private set; }
+        private int previousRandomNum;
+        public IEnumerator GenerateLayer(int seed, int worldLength, Action completed)
         {
+            progress = 0;
+            currentOperation = "正在生成环境图";
             var length = worldLength * Constants.ChunkLength;
             var height = Constants.WorldHeight * Constants.ChunkLength;
 
@@ -22,16 +28,19 @@ namespace Terrain
             var temperaturemap = new int[length, length];
             //湿度图
             var humiditymap = new int[length, length];
+            yield return FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
+            progress = 20;
 
-            FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
+            currentOperation = "正在生成领地图";
             //领地图
             var territorymap = new int[length, length];
             //领地表
             var id2Territory = new List<Territory>();
-
             var territorySeed = seed;
             while (!TryFillTerritorymap(territorySeed, territorymap, id2Territory))
             {
+                yield return null;
+
                 territorySeed++;
                 if (territorySeed - seed + 1 > 4)
                 {
@@ -40,11 +49,19 @@ namespace Terrain
             }
             var times = territorySeed - seed + 1;
             Debug.Log($"Try to fill the territory {times} times");
+            progress = 40;
 
+
+            currentOperation = "正在生成路径图";
             //路径信息
-            var paths = GeneratePaths(id2Territory, territorymap);
-            var coord2MinDistanceFromPath = GetCoord2MinDistanceFromPath(paths, length, height, heightmap);
+            var paths = new List<Path>();
+            yield return GeneratePaths(paths, id2Territory, territorymap);
+            var coord2MinDistanceFromPath = new Dictionary<Coord3Int, int>();
+            yield return GenerateCoord2MinDistanceFromPath(coord2MinDistanceFromPath, paths, length, height, heightmap);
+            progress = 60;
 
+
+            currentOperation = "正在生成噪声图";
             //生成3D噪声图
             var blockmap = new int[length, height, length];
             for (int x = 0; x < length; x++)
@@ -62,16 +79,16 @@ namespace Terrain
                         //高度差达到NoiseImpactRange时:factor = 0
                         //更大差值时候:factor < 0
                         var heightDifference = Mathf.Abs(y - curHeight);
-                        var heightFactor = ((float)Constants.NoiseImpactRange - heightDifference) / Constants.NoiseImpactRange;
+                        var heightFactor = ((float)Constants.HeightNoiseImpactRange - heightDifference) / Constants.HeightNoiseImpactRange;
 
                         //在领地中心为:territoryFactor = 0;
                         //距离领地距离达到Range时:territoryFactor = 1;
-                        //更远距离时候:territoryFactor = 1
+                        //更远距离时候:territoryFactor > 1
                         var territoryIndex = territorymap[x, z];
                         var territoryFactor = 0f;
                         if (territoryIndex == -1)
                         {
-                            territoryFactor = 0f;
+                            territoryFactor = 1;
                         }
                         else
                         {
@@ -103,7 +120,7 @@ namespace Terrain
                         var factor = float.MaxValue;
                         var factors = new float[] { heightFactor, territoryFactor, pathFactor };
                         foreach (var f in factors) { if (f < factor) factor = f; }
-                        factor = Mathf.Clamp(0, 1, factor);
+                        factor = Mathf.Clamp(factor, 0, 1);
 
                         if (y <= curHeight)
                         {
@@ -111,27 +128,49 @@ namespace Terrain
                         }
                         //if (factor > 0)
                         //{
-                        //    var noiseDensity = 0.007f;
+                        //    var noiseDensity = 0.03f;
                         //    var noise = PerlinNoise.PerlinNoise3D(seed + 2213, x * noiseDensity, y * noiseDensity, z * noiseDensity);
                         //    noise *= factor;
-                        //    if (noise > 0.5f)
+                        //    if (noise > 0.33f)
                         //    {
                         //        blockmap[x, y, z] = 1;
                         //    }
-                        //    else if (noise < -0.5f)
+                        //    else if (noise < -0.33f)
                         //    {
                         //        blockmap[x, y, z] = 0;
                         //    }
                         //    else
                         //    {
-                        //        blockmap[x, y, z] = 0;
+                        //        blockmap[x, y, z] = 1;
                         //    }
                         //}
 
+                        var noiseDensity = 0.03f;
+                        var noise = PerlinNoise.PerlinNoise3D(seed + 2213, x * noiseDensity, y * noiseDensity, z * noiseDensity);
+                        if (y <= curHeight)
+                        {
+                            blockmap[x, y, z] = 1;
+                        }
+                        if (noise > 0.33f)
+                        {
+                            blockmap[x, y, z] = 1;
+                        }
+                        else if (noise < -0.33f)
+                        {
+                            blockmap[x, y, z] = 0;
+                        }
+                        else
+                        {
+                            blockmap[x, y, z] = 1;
+                        }
+
                     }
                 }
+                yield return null;
             }
+            progress = 100;
 
+            result = new Layer(blockmap, null);
             #region 生成图片查看结果
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
 
@@ -176,13 +215,11 @@ namespace Terrain
             byte[] bytes = texture.EncodeToPNG();
             System.IO.File.WriteAllBytes($"{Application.dataPath}/aa.png", bytes);
             #endregion
-
-            return new Layer(blockmap, null);
+            completed?.Invoke();
         }
 
-        private IReadOnlyDictionary<Coord3Int, int> GetCoord2MinDistanceFromPath(IReadOnlyList<Path> paths, int length, int height, int[,] heightmap)
+        private IEnumerator GenerateCoord2MinDistanceFromPath(Dictionary<Coord3Int, int> coord2MinDistanceFromPath, IReadOnlyList<Path> paths, int length, int height, int[,] heightmap)
         {
-            var coord2MinDistanceFromPath = new Dictionary<Coord3Int, int>();
             for (int i = 0; i < paths.Count; i++)
             {
                 var path = paths[i];
@@ -233,8 +270,8 @@ namespace Terrain
                         }
                     }
                 }
+                yield return null;
             }
-            return coord2MinDistanceFromPath;
         }
         private IReadOnlyList<Coord2Int> GenerateCoordsOnPathByAStar(Coord2Int start, Coord2Int goal, int[,] territorymap)
         {
@@ -341,10 +378,8 @@ namespace Terrain
         {
             return Mathf.Abs(start.x - goal.x) + Mathf.Abs(start.y - goal.y) + Mathf.Abs(start.z - goal.z);
         }
-        private IReadOnlyList<Path> GeneratePaths(IReadOnlyList<Territory> id2Territory, int[,] territorymap)
+        private IEnumerator GeneratePaths(List<Path> paths, IReadOnlyList<Territory> id2Territory, int[,] territorymap)
         {
-            var paths = new List<Path>();
-
             var markedTerritories = new List<Territory>();
             var unmarkedTerritories = new List<Territory>();
             BossTerritory bossTerritory = null;
@@ -366,6 +401,8 @@ namespace Terrain
                     }
                 }
             }
+            yield return null;
+
             unmarkedTerritories.Add(bossTerritory);
             while (unmarkedTerritories.Count > 0)
             {
@@ -401,8 +438,8 @@ namespace Terrain
                 unmarkedTerritories.RemoveAt(minDisUnmarkedTerritoryIndex);
                 var coords = GenerateCoordsOnPathByAStar(departure.CenterCoord, destination.CenterCoord, territorymap);
                 paths.Add(new Path(departure, destination, coords));
+                yield return null;
             }
-            return paths;
         }
         private bool TryFillTerritorymap(int seed, int[,] territorymap, List<Territory> id2Territory)
         {
@@ -558,13 +595,13 @@ namespace Terrain
             previousRandomNum = value;
             return value;
         }
-        private void FillEnvironmentalmaps(int seed, int length, int[,] heightmap, int[,] temperaturemap, int[,] humiditymap)
+        private IEnumerator FillEnvironmentalmaps(int seed, int length, int[,] heightmap, int[,] temperaturemap, int[,] humiditymap)
         {
             for (int x = 0; x < length; x++)
             {
                 for (int z = 0; z < length; z++)
                 {
-                    var heightNoiseDensity = 0.0007f;
+                    var heightNoiseDensity = 0.007f;
                     var heightNoise = PerlinNoise.PerlinNoise2D(seed + 1232, x * heightNoiseDensity, z * heightNoiseDensity) * 0.5f + 0.5f;
                     heightmap[x, z] = (int)(Mathf.Lerp(Constants.MinHeight, Constants.MaxHeight, heightNoise));
 
@@ -576,8 +613,8 @@ namespace Terrain
                     var humidityNoise = PerlinNoise.PerlinNoise2D(seed + 96, x * humidityNoiseDensity, z * humidityNoiseDensity) * 0.5f + 0.5f;
                     humiditymap[x, z] = (int)(Mathf.Lerp(Constants.MinHumidity, Constants.MaxHumidity, humidityNoise));
                 }
+                yield return null;
             }
         }
-
     }
 }
