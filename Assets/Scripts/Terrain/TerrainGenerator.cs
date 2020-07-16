@@ -45,6 +45,7 @@ namespace Terrain
             var paths = GeneratePaths(id2Territory, territorymap);
             var coord2MinDistanceFromPath = GetCoord2MinDistanceFromPath(paths, length, height, heightmap);
 
+            //生成3D噪声图
             var blockmap = new int[length, height, length];
             for (int x = 0; x < length; x++)
             {
@@ -65,12 +66,22 @@ namespace Terrain
 
                         //在领地中心为:territoryFactor = 0;
                         //距离领地距离达到Range时:territoryFactor = 1;
-                        //更远距离时候:territoryFactor > 1
-                        var territory = id2Territory[territorymap[x, z]];
-                        var territoryRange = territory.Range;
-                        var territoryCenter = territory.CenterCoord;
-                        var disSquare = (x - territoryCenter.x) * (x - territoryCenter.x) + (y - curHeight) * (y - curHeight) + (z - territoryCenter.y) * (z - territoryCenter.y);
-                        var territoryFactor = (float)disSquare / (territoryRange * territoryRange);
+                        //更远距离时候:territoryFactor = 1
+                        var territoryIndex = territorymap[x, z];
+                        var territoryFactor = 0f;
+                        if (territoryIndex == -1)
+                        {
+                            territoryFactor = 0f;
+                        }
+                        else
+                        {
+                            var territory = id2Territory[territoryIndex];
+                            var territoryRange = territory.Range;
+                            var territoryCenter = territory.CenterCoord;
+                            var disSquare = (x - territoryCenter.x) * (x - territoryCenter.x) + (y - curHeight) * (y - curHeight) + (z - territoryCenter.y) * (z - territoryCenter.y);
+                            territoryFactor = (float)disSquare / (territoryRange * territoryRange);
+                        }
+
 
                         //通过coord2MinDistanceFromPath查找并影响权重
                         //距离道路为0时:pathFactor = 0
@@ -93,6 +104,30 @@ namespace Terrain
                         var factors = new float[] { heightFactor, territoryFactor, pathFactor };
                         foreach (var f in factors) { if (f < factor) factor = f; }
                         factor = Mathf.Clamp(0, 1, factor);
+
+                        if (y <= curHeight)
+                        {
+                            blockmap[x, y, z] = 1;
+                        }
+                        //if (factor > 0)
+                        //{
+                        //    var noiseDensity = 0.007f;
+                        //    var noise = PerlinNoise.PerlinNoise3D(seed + 2213, x * noiseDensity, y * noiseDensity, z * noiseDensity);
+                        //    noise *= factor;
+                        //    if (noise > 0.5f)
+                        //    {
+                        //        blockmap[x, y, z] = 1;
+                        //    }
+                        //    else if (noise < -0.5f)
+                        //    {
+                        //        blockmap[x, y, z] = 0;
+                        //    }
+                        //    else
+                        //    {
+                        //        blockmap[x, y, z] = 0;
+                        //    }
+                        //}
+
                     }
                 }
             }
@@ -142,7 +177,7 @@ namespace Terrain
             System.IO.File.WriteAllBytes($"{Application.dataPath}/aa.png", bytes);
             #endregion
 
-            return new Layer(null, null);
+            return new Layer(blockmap, null);
         }
 
         private IReadOnlyDictionary<Coord3Int, int> GetCoord2MinDistanceFromPath(IReadOnlyList<Path> paths, int length, int height, int[,] heightmap)
@@ -201,7 +236,6 @@ namespace Terrain
             }
             return coord2MinDistanceFromPath;
         }
-
         private IReadOnlyList<Coord2Int> GenerateCoordsOnPathByAStar(Coord2Int start, Coord2Int goal, int[,] territorymap)
         {
             var coordOpenSet = new HashSet<Coord2Int>() { start };
@@ -530,7 +564,7 @@ namespace Terrain
             {
                 for (int z = 0; z < length; z++)
                 {
-                    var heightNoiseDensity = 0.0003f;
+                    var heightNoiseDensity = 0.0007f;
                     var heightNoise = PerlinNoise.PerlinNoise2D(seed + 1232, x * heightNoiseDensity, z * heightNoiseDensity) * 0.5f + 0.5f;
                     heightmap[x, z] = (int)(Mathf.Lerp(Constants.MinHeight, Constants.MaxHeight, heightNoise));
 

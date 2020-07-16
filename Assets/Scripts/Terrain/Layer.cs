@@ -4,7 +4,7 @@ namespace Terrain
 {
     public class Layer
     {
-        private int[,,] blockmap;
+        public int[,,] blockmap;
         private int[,] temperaturemap;
         private int[,] humiditymap;
         private int[,] structuremap;
