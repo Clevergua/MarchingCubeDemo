@@ -75,9 +75,9 @@ namespace Terrain
                         //factor * noise
                         var currentCoord = new Coord3Int(x, y, z);
 
-                        //高度差为0的时:factor = 1
+                        //高度差为0的时:heightFactor = 1
                         //高度差达到NoiseImpactRange时:factor = 0
-                        //更大差值时候:factor < 0
+                        //更大差值时候:heightFactor < 0
                         var heightDifference = Mathf.Abs(y - curHeight);
                         var heightFactor = ((float)Constants.HeightNoiseImpactRange - heightDifference) / Constants.HeightNoiseImpactRange;
 
@@ -126,44 +126,20 @@ namespace Terrain
                         {
                             blockmap[x, y, z] = 1;
                         }
-                        //if (factor > 0)
-                        //{
-                        //    var noiseDensity = 0.03f;
-                        //    var noise = PerlinNoise.PerlinNoise3D(seed + 2213, x * noiseDensity, y * noiseDensity, z * noiseDensity);
-                        //    noise *= factor;
-                        //    if (noise > 0.33f)
-                        //    {
-                        //        blockmap[x, y, z] = 1;
-                        //    }
-                        //    else if (noise < -0.33f)
-                        //    {
-                        //        blockmap[x, y, z] = 0;
-                        //    }
-                        //    else
-                        //    {
-                        //        blockmap[x, y, z] = 1;
-                        //    }
-                        //}
-
-                        var noiseDensity = 0.03f;
-                        var noise = PerlinNoise.PerlinNoise3D(seed + 2213, x * noiseDensity, y * noiseDensity, z * noiseDensity);
-                        if (y <= curHeight)
+                        if (factor > 0)
                         {
-                            blockmap[x, y, z] = 1;
+                            var noiseDensity = 0.03f;
+                            var noise = PerlinNoise.PerlinNoise3D(seed + 2213, x * noiseDensity, y * noiseDensity, z * noiseDensity);
+                            noise *= factor;
+                            if (noise > 0.1f)
+                            {
+                                blockmap[x, y, z] = 1;
+                            }
+                            else if (noise < -0.2f)
+                            {
+                                blockmap[x, y, z] = 0;
+                            }
                         }
-                        if (noise > 0.33f)
-                        {
-                            blockmap[x, y, z] = 1;
-                        }
-                        else if (noise < -0.33f)
-                        {
-                            blockmap[x, y, z] = 0;
-                        }
-                        else
-                        {
-                            blockmap[x, y, z] = 1;
-                        }
-
                     }
                 }
                 yield return null;
@@ -209,6 +185,10 @@ namespace Terrain
                     }
 
                 }
+            }
+            foreach (var item in coord2MinDistanceFromPath)
+            {
+                texture.SetPixel(item.Key.x, item.Key.z, Color.green);
             }
             // Apply all SetPixel calls
             texture.Apply();
