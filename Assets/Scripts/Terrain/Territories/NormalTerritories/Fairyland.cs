@@ -4,6 +4,6 @@ namespace Terrain
 {
     internal class Fairyland : NormalTerritory
     {
-        public override int Range { get { return 64; } }
+        public override int Range { get { return 32; } }
     }
 }

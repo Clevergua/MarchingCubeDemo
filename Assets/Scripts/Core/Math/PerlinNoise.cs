@@ -1,20 +1,20 @@
-﻿using UnityEngine;
+﻿using System;
 namespace Core
 {
     public class PerlinNoise
     {
-        private static readonly Vector2Int[] GRAD_2D =
+        private static readonly Coord2Int[] GRAD_2D =
         {
-            new Vector2Int(-1,-1), new Vector2Int( 1,-1), new Vector2Int(-1, 1), new Vector2Int( 1, 1),
-            new Vector2Int( 0,-1), new Vector2Int(-1, 0), new Vector2Int( 0, 1), new Vector2Int( 1, 0),
+            new Coord2Int(-1,-1), new Coord2Int( 1,-1), new Coord2Int(-1, 1), new Coord2Int( 1, 1),
+            new Coord2Int( 0,-1), new Coord2Int(-1, 0), new Coord2Int( 0, 1), new Coord2Int( 1, 0),
         };
-        private static readonly Vector3Int[] GRAD_3D =
+        private static readonly Coord3Int[] GRAD_3D =
         {
-            new Vector3Int( 1, 1, 0), new Vector3Int(-1, 1, 0), new Vector3Int( 1,-1, 0), new Vector3Int(-1,-1, 0),
-            new Vector3Int( 1, 0, 1), new Vector3Int(-1, 0, 1), new Vector3Int( 1, 0,-1), new Vector3Int(-1, 0,-1),
-            new Vector3Int( 0, 1, 1), new Vector3Int( 0,-1, 1), new Vector3Int( 0, 1,-1), new Vector3Int( 0,-1,-1),
-            new Vector3Int( 1, 1, 0), new Vector3Int( 0,-1, 1), new Vector3Int(-1, 1, 0), new Vector3Int( 0,-1,-1),
-    };
+            new Coord3Int( 1, 1, 0), new Coord3Int(-1, 1, 0), new Coord3Int( 1,-1, 0), new Coord3Int(-1,-1, 0),
+            new Coord3Int( 1, 0, 1), new Coord3Int(-1, 0, 1), new Coord3Int( 1, 0,-1), new Coord3Int(-1, 0,-1),
+            new Coord3Int( 0, 1, 1), new Coord3Int( 0,-1, 1), new Coord3Int( 0, 1,-1), new Coord3Int( 0,-1,-1),
+            new Coord3Int( 1, 1, 0), new Coord3Int( 0,-1, 1), new Coord3Int(-1, 1, 0), new Coord3Int( 0,-1,-1),
+        };
 
 
         private static float Lerp(float a, float b, float t)
@@ -22,7 +22,7 @@ namespace Core
             t = t * t * t * (6 * t * t - 15 * t + 10);
             return a + (b - a) * t;
         }
-        private static Vector2Int GetGradient2D(int x, int y, int seed)
+        private static Coord2Int GetGradient2D(int x, int y, int seed)
         {
             int hash = RNG.Random2(x, y, seed);
 
@@ -30,7 +30,7 @@ namespace Core
             if (index < 0) index += 8;
             return GRAD_2D[index];
         }
-        private static Vector3Int GetGradient3D(int x, int y, int z, int seed)
+        private static Coord3Int GetGradient3D(int x, int y, int z, int seed)
         {
             int hash = RNG.Random3(x, y, z, seed);
 
@@ -43,7 +43,7 @@ namespace Core
             float dx = x - ix;
             float dy = y - iy;
 
-            Vector2Int gradient = GetGradient2D(ix, iy, seed);
+            Coord2Int gradient = GetGradient2D(ix, iy, seed);
             return dx * gradient.x + dy * gradient.y;
         }
         private static float DotGridGradient3D(int ix, int iy, int iz, float x, float y, float z, int seed)
@@ -52,16 +52,16 @@ namespace Core
             float dy = y - iy;
             float dz = z - iz;
 
-            Vector3Int gradient = GetGradient3D(ix, iy, iz, seed);
+            Coord3Int gradient = GetGradient3D(ix, iy, iz, seed);
             return dx * gradient.x + dy * gradient.y + dz * gradient.z;
         }
 
         public static float PerlinNoise2D(int seed, float x, float y)
         {
             // Determine grid cell coordinates
-            int x0 = Mathf.FloorToInt(x);
+            int x0 = (int)Math.Floor(x);
             int x1 = x0 + 1;
-            int y0 = Mathf.FloorToInt(y);
+            int y0 = (int)Math.Floor(y);
             int y1 = y0 + 1;
             // Determine interpolation weights
             // Could also use higher order polynomial/s-curve here
@@ -82,11 +82,11 @@ namespace Core
         public static float PerlinNoise3D(int seed, float x, float y, float z)
         {
             // Determine grid cell coordinates
-            int x0 = Mathf.FloorToInt(x);
+            int x0 = (int)Math.Floor(x);
             int x1 = x0 + 1;
-            int y0 = Mathf.FloorToInt(y);
+            int y0 = (int)Math.Floor(y);
             int y1 = y0 + 1;
-            int z0 = Mathf.FloorToInt(z);
+            int z0 = (int)Math.Floor(z);
             int z1 = z0 + 1;
             // Determine interpolation weights
             // Could also use higher order polynomial/s-curve here
@@ -106,23 +106,35 @@ namespace Core
         }
         public static float SuperimposedOctave3D(int seed, float x, float y, float z, int superposition = 1)
         {
+            if (superposition < 1)
+            {
+                throw new Exception("Parameter superposition must be greater than 1");
+            }
             float result = 0;
             superposition = superposition < 0 ? 0 : superposition;
             for (int i = 0; i < superposition; i++)
             {
-                float nIthPower = Mathf.Pow(2, i);
-                result += PerlinNoise3D(seed + i, nIthPower * x, nIthPower * y, nIthPower * z) * Mathf.Pow(0.5f, i);
+                float nIthPower = Pow(2, i);
+                result += PerlinNoise3D(seed + i, nIthPower * x, nIthPower * y, nIthPower * z) * Pow(0.5f, i);
             }
             return result;
         }
+
+        private static float Pow(float f, int p)
+        {
+            float res = f;
+            for (int i = 1; i < p; i++) { res *= f; }
+            return res;
+        }
+
         public static float SuperimposedOctave2D(int seed, float x, float y, int superposition = 1)
         {
             float result = 0;
             superposition = superposition < 0 ? 0 : superposition;
             for (int i = 0; i < superposition; i++)
             {
-                float nIthPower = Mathf.Pow(2, i);
-                result += PerlinNoise2D(seed + i, nIthPower * x, nIthPower * y) * Mathf.Pow(0.5f, i);
+                float nIthPower = Pow(2, i);
+                result += PerlinNoise2D(seed + i, nIthPower * x, nIthPower * y) * Pow(0.5f, i);
             }
             return result;
         }

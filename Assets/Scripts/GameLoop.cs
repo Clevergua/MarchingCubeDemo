@@ -11,13 +11,17 @@ public class GameLoop : MonoBehaviour
     TerrainGenerator terrainGen;
     [SerializeField] Text text;
     [SerializeField] GameObject prefab;
+    [SerializeField] GameObject waterPrefab;
+    [SerializeField] GameObject pathPrefab;
+
     // Start is called before the first frame update
     void Start()
     {
         //Create level
         terrainGen = new TerrainGenerator();
         var seed = Random.Range(int.MinValue, int.MaxValue);
-        StartCoroutine(terrainGen.GenerateLayer(0, 32, () =>
+        Debug.Log(seed);
+        StartCoroutine(terrainGen.GenerateLayer(0, 16, () =>
         {
             l = terrainGen.result;
             StartCoroutine(Show());
@@ -38,13 +42,24 @@ public class GameLoop : MonoBehaviour
                     }
                     else
                     {
-                        if (l.blockmap[x + 1, y, z] == 1 && l.blockmap[x - 1, y, z] == 1 && l.blockmap[x, y + 1, z] == 1 && l.blockmap[x, y - 1, z] == 1 && l.blockmap[x, y, z - 1] == 1 && l.blockmap[x, y, z + 1] == 1)
+                        if (l.blockmap[x + 1, y, z] != 0 && l.blockmap[x - 1, y, z] != 0 && l.blockmap[x, y + 1, z] != 0 && l.blockmap[x, y - 1, z] != 0 && l.blockmap[x, y, z - 1] != 0 && l.blockmap[x, y, z + 1] != 0)
                         {
 
                         }
                         else
                         {
-                            var go = Instantiate(prefab, new Vector3(x, y, z), Quaternion.identity, parent.transform);
+                            if (l.blockmap[x, y, z] == 1)
+                            {
+                                var go = Instantiate(prefab, new Vector3(x, y, z), Quaternion.identity, parent.transform);
+                            }
+                            else if (l.blockmap[x, y, z] == 2)
+                            {
+                                var go = Instantiate(waterPrefab, new Vector3(x, y, z), Quaternion.identity, parent.transform);
+                            }
+                            else if (l.blockmap[x, y, z] == 3)
+                            {
+                                var go = Instantiate(pathPrefab, new Vector3(x, y, z), Quaternion.identity, parent.transform);
+                            }
                         }
                     }
                 }

@@ -2,6 +2,6 @@
 {
     internal class AdventurerTerritory : SpecialTerritory
     {
-        public override int Range { get { return 32; } }
+        public override int Range { get { return 16; } }
     }
 }

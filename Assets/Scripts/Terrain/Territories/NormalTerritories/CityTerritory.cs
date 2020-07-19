@@ -2,6 +2,6 @@
 {
     internal class CityTerritory : NormalTerritory
     {
-        public override int Range { get { return 128; } }
+        public override int Range { get { return 32; } }
     }
 }
