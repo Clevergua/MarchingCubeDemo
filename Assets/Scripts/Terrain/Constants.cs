@@ -24,7 +24,5 @@ namespace Terrain
         public static readonly int PathRange = 8;
 
         public static readonly int HeightNoiseImpactRange = 32;
-
-        public static readonly int WaterLevel = 76;
     }
 }

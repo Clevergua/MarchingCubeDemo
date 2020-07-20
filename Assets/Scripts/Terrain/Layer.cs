@@ -9,15 +9,10 @@ namespace Terrain
         private int[,] humiditymap;
         private int[,] structuremap;
 
-        private IReadOnlyList<Island> islands;
-
-        public Layer(byte[,,] blockmap, IReadOnlyList<Island> islands)
+        public Layer(byte[,,] blockmap)
         {
-
             this.blockmap = blockmap;
-            this.islands = islands;
         }
-
         internal int GetBlockID(int x, int y, int z)
         {
             return blockmap[x, y, z];

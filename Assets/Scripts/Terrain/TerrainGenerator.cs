@@ -64,11 +64,14 @@ namespace Terrain
             //处理后的数据:0:空 1:实体 2:凹洞
             yield return NoiseBlockmap(blockmap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
 
+            //生成生物群落数据
+            var biomeSelector = new BiomeSelector();
+
             currentOperation = "正在填充水和岩浆";
             progress = 70;
-            yield return FillPits(blockmap);
+            yield return FillPits(blockmap, biomeSelector, temperaturemap, humiditymap);
 
-            result = new Layer(blockmap, null);
+            result = new Layer(blockmap);
             #region 生成图片查看结果
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
 
@@ -121,7 +124,7 @@ namespace Terrain
             completed?.Invoke();
         }
 
-        private IEnumerator FillPits(byte[,,] blockmap)
+        private IEnumerator FillPits(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap)
         {
             var length = blockmap.GetLength(0);
             var height = blockmap.GetLength(1);
@@ -139,7 +142,14 @@ namespace Terrain
                         {
                             if (!processedPitCoords.Contains(currentCoord))
                             {
-
+                                var altitudeTemperature = CalTemperature(temperaturemap[x, z], heightmap[x, z]);
+                                var humidity = humiditymap[x, z];
+                                var biome = biomeSelector.Select(altitudeTemperature, humidity);
+                                var pitCoords = GetPitCoords(currentCoord, blockmap);
+                                foreach (var pitCoord in pitCoords)
+                                {
+                                    processedPitCoords.Add(currentCoord);
+                                }
                             }
                             else
                             {
@@ -148,6 +158,34 @@ namespace Terrain
                         }
                     }
                 }
+            }
+        }
+
+        private IReadOnlyList<Coord3Int> GetPitCoords(Coord3Int startPoint, byte[,,] blockmap)
+        {
+            List<Coord3Int> pitCoords = new List<Coord3Int>();
+            var queue = new Queue<Coord3Int>();
+            var queue
+            queue.Enqueue(startPoint);
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+
+            }
+        }
+
+        //温度计算公式
+        private int CalTemperature(int baseTemperature, int height)
+        {
+            if (height < Constants.MinHeight)
+            {
+                return baseTemperature;
+            }
+            else
+            {
+                var dropedPerMeter = 0.1f;
+                var t = baseTemperature - (int)((height - Constants.MinHeight) * dropedPerMeter);
+                return t;
             }
         }
 

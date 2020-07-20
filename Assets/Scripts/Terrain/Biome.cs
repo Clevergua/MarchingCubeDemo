@@ -4,7 +4,6 @@ namespace Terrain
 {
     public abstract class Biome
     {
-        
     }
 }
 
