@@ -17,8 +17,9 @@ namespace Terrain
         private int previousRandomNum;
         public IEnumerator GenerateLayer(int seed, int worldLength, Action completed)
         {
-            progress = 0;
             currentOperation = "正在生成环境图";
+            progress = 10;
+
             var length = worldLength * Constants.ChunkLength;
             var height = Constants.WorldHeight * Constants.ChunkLength;
 
@@ -28,10 +29,11 @@ namespace Terrain
             var temperaturemap = new int[length, length];
             //湿度图
             var humiditymap = new int[length, length];
-            progress = 10;
             yield return FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
 
             currentOperation = "正在生成领地图";
+            progress = 20;
+
             //领地图
             var territorymap = new int[length, length];
             //领地表
@@ -41,39 +43,30 @@ namespace Terrain
             {
                 throw new Exception($"Try to fill the territory too many times");
             }
-            //while (!TryFillTerritorymap(territorySeed, territorymap, id2Territory))
-            //{
-            //    yield return null;
-
-            //    territorySeed++;
-            //    if (territorySeed - seed + 1 > 4)
-            //    {
-            //        throw new Exception($"Try to fill the territory too many times");
-            //    }
-            //}
             var times = territorySeed - seed + 1;
             Debug.Log($"Try to fill the territory {times} times");
-            progress = 20;
-            yield return null;
 
             currentOperation = "正在生成路径图";
+            progress = 30;
+
             //路径信息
             var paths = new List<Path>();
             yield return GeneratePaths(paths, id2Territory, territorymap);
             var coord2MinDistanceFromPath = new Dictionary<Coord3Int, int>();
-            progress = 30;
             yield return GenerateCoord2MinDistanceFromPath(coord2MinDistanceFromPath, paths, length, height, heightmap);
 
 
             currentOperation = "正在生成噪声图";
-            //生成3D噪声图和凹洞的字典数据
-            var blockmap = new int[length, height, length];
-            var coord2PitCoords = new Dictionary<Coord3Int, List<Coord3Int>>();
             progress = 50;
+
+            //生成3D噪声图和凹洞的字典数据
+            var blockmap = new byte[length, height, length];
             //处理后的数据:0:空 1:实体 2:凹洞
-            yield return NoiseBlockmapAndGenerateCoord2PitCoords(blockmap, coord2PitCoords, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
+            yield return NoiseBlockmap(blockmap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
 
-
+            currentOperation = "正在填充水和岩浆";
+            progress = 70;
+            yield return FillPits(blockmap);
 
             result = new Layer(blockmap, null);
             #region 生成图片查看结果
@@ -128,10 +121,44 @@ namespace Terrain
             completed?.Invoke();
         }
 
-        private IEnumerator NoiseBlockmapAndGenerateCoord2PitCoords(int[,,] blockmap, Dictionary<Coord3Int, List<Coord3Int>> coord2PitCoords, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
+        private IEnumerator FillPits(byte[,,] blockmap)
         {
             var length = blockmap.GetLength(0);
             var height = blockmap.GetLength(1);
+            var processedPitCoords = new HashSet<Coord3Int>();
+            byte pit = 2;
+
+            for (int x = 0; x < length; x++)
+            {
+                for (int z = 0; z < length; z++)
+                {
+                    for (int y = 0; y < height; y++)
+                    {
+                        var currentCoord = new Coord3Int(x, y, z);
+                        if (blockmap[x, y, z] == pit)
+                        {
+                            if (!processedPitCoords.Contains(currentCoord))
+                            {
+
+                            }
+                            else
+                            {
+                                //Do nothing..
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private IEnumerator NoiseBlockmap(byte[,,] blockmap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
+        {
+            var length = blockmap.GetLength(0);
+            var height = blockmap.GetLength(1);
+
+            byte entity = 1;
+            byte pit = 2;
+
 
             for (int x = 0; x < length; x++)
             {
@@ -155,7 +182,7 @@ namespace Terrain
                         heightNoiseMagnification *= heightNoiseMagnification;
                         //在领地中心为:territoryFactor = 0;
                         //距离领地距离达到Range时:territoryFactor = 1;
-                        //更远距离时候:territoryFactor > 1
+                        //更远距离时候:territoryFactor > 1;
                         var territoryIndex = territorymap[x, z];
                         var territoryFactor = 0f;
                         if (territoryIndex == -1)
@@ -197,7 +224,7 @@ namespace Terrain
 
                         if (y <= curHeight)
                         {
-                            blockmap[x, y, z] = 1;
+                            blockmap[x, y, z] = entity;
                         }
                         if (factor > 0)
                         {
@@ -207,12 +234,11 @@ namespace Terrain
                             noise *= factor;
                             if (noise > 0.1f)
                             {
-                                blockmap[x, y, z] = 1;
+                                blockmap[x, y, z] = entity;
                             }
                             else if (noise < -0.2f && blockmap[x, y, z] == 1)
                             {
-
-                                blockmap[x, y, z] = 2;
+                                blockmap[x, y, z] = pit;
                             }
                         }
                     }
@@ -220,7 +246,6 @@ namespace Terrain
                 yield return null;
             }
         }
-
         private IEnumerator GenerateCoord2MinDistanceFromPath(Dictionary<Coord3Int, int> coord2MinDistanceFromPath, IReadOnlyList<Path> paths, int length, int height, int[,] heightmap)
         {
             for (int i = 0; i < paths.Count; i++)

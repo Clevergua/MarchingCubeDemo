@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using NUnit.Framework;
 using Terrain;
 using UnityEngine;
@@ -12,6 +13,10 @@ namespace Tests
         [Test]
         public void TerrainTestSimplePasses()
         {
+            var i = -1;
+            byte b1 = (byte)i;
+            byte b2 = 255;
+            Debug.Log($"{b1 == b2}");
             //var terrainGenerator = new TerrainGenerator();
             //var temperateLayer = new TemperateLayer();
             //Biome tropicalLayer = new TropicalLayer();

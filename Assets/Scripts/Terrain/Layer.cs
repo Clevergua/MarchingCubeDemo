@@ -4,15 +4,16 @@ namespace Terrain
 {
     public class Layer
     {
-        public int[,,] blockmap;
+        public byte[,,] blockmap;
         private int[,] temperaturemap;
         private int[,] humiditymap;
         private int[,] structuremap;
 
         private IReadOnlyList<Island> islands;
 
-        public Layer(int[,,] blockmap, IReadOnlyList<Island> islands)
+        public Layer(byte[,,] blockmap, IReadOnlyList<Island> islands)
         {
+
             this.blockmap = blockmap;
             this.islands = islands;
         }
