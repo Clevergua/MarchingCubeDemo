@@ -9,6 +9,8 @@
         Dirt = 2,
         Water = 3,
         Lava = 4,
-
+        Ice = 5,
+        Snow = 6,
+        Grass = 7,
     }
 }

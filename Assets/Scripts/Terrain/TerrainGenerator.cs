@@ -21,7 +21,7 @@ namespace Terrain
         public IEnumerator GenerateLayer(int seed, int worldLength)
         {
             currentOperation = "正在生成环境图";
-            progress = 10;
+            progress = 5;
             yield return null;
             var length = worldLength * Constants.ChunkLength;
             var height = Constants.WorldHeight * Constants.ChunkLength;
@@ -32,11 +32,12 @@ namespace Terrain
             var temperaturemap = new int[length, length];
             //湿度图
             var humiditymap = new int[length, length];
-            currentOperation = "正在生成领地图";
-            progress = 20;
+
             yield return FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
 
-
+            currentOperation = "正在生成领地图";
+            progress = 10;
+            yield return null;
             //领地图
             var territorymap = new int[length, length];
             //领地表
@@ -50,7 +51,7 @@ namespace Terrain
             Debug.Log($"Try to fill the territory {times} times");
 
             currentOperation = "正在生成路径图";
-            progress = 30;
+            progress = 20;
             yield return null;
             //路径信息
             var paths = new List<Path>();
@@ -76,10 +77,14 @@ namespace Terrain
             yield return FillPits(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
 
             currentOperation = "正在创建地表";
-            progress = 70;
+            progress = 80;
             yield return null;
             yield return CreateSurfaceLayer(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
 
+            currentOperation = "正在进行种植";
+            progress = 90;
+            yield return null;
+            yield return CreatePlants(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
             result = new Layer(blockmap);
             #region 生成图片查看结果
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
@@ -133,6 +138,23 @@ namespace Terrain
             isDone = true;
         }
 
+        private IEnumerator CreatePlants(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
+        {
+            var length = blockmap.GetLength(0);
+            for (int x = 0; x < length; x++)
+            {
+                for (int z = 0; z < length; z++)
+                {
+                    var altitudeTemperature = Constants.CalTemperature(temperaturemap[x, z], heightmap[x, z]);
+                    var humidity = humiditymap[x, z];
+                    var biome = biomeSelector.Select(altitudeTemperature, humidity);
+                    biome.Planting(blockmap, x, z, temperaturemap, humiditymap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
+                }
+                yield return null;
+            }
+        }
+
+
         private IEnumerator CreateSurfaceLayer(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int seed)
         {
             var length = blockmap.GetLength(0);
@@ -140,7 +162,7 @@ namespace Terrain
             {
                 for (int z = 0; z < length; z++)
                 {
-                    var altitudeTemperature = CalTemperature(temperaturemap[x, z], heightmap[x, z]);
+                    var altitudeTemperature = Constants.CalTemperature(temperaturemap[x, z], heightmap[x, z]);
                     var humidity = humiditymap[x, z];
                     var biome = biomeSelector.Select(altitudeTemperature, humidity);
                     biome.Growing(blockmap, x, z, seed);
@@ -148,7 +170,6 @@ namespace Terrain
                 yield return null;
             }
         }
-
         private IEnumerator FillPits(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int seed)
         {
             var length = blockmap.GetLength(0);
@@ -167,7 +188,7 @@ namespace Terrain
                         if (blockmap[x, y, z] == pit && !processedPitCoords.Contains(currentCoord))
                         {
                             //选择一个生物群落来处理凹洞
-                            var altitudeTemperature = CalTemperature(temperaturemap[x, z], heightmap[x, z]);
+                            var altitudeTemperature = Constants.CalTemperature(temperaturemap[x, z], heightmap[x, z]);
                             var humidity = humiditymap[x, z];
                             var biome = biomeSelector.Select(altitudeTemperature, humidity);
 
@@ -211,22 +232,6 @@ namespace Terrain
                         }
                     }
                 }
-            }
-        }
-
-
-        //温度计算公式
-        private int CalTemperature(int baseTemperature, int height)
-        {
-            if (height < Constants.MinHeight)
-            {
-                return baseTemperature;
-            }
-            else
-            {
-                var dropedPerMeter = 0.1f;
-                var t = baseTemperature - (int)((height - Constants.MinHeight) * dropedPerMeter);
-                return t;
             }
         }
         private IEnumerator NoiseBlockmap(byte[,,] blockmap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)

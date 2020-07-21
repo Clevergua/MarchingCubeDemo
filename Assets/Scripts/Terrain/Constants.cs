@@ -24,5 +24,20 @@ namespace Terrain
         public static readonly int PathRange = 8;
 
         public static readonly int HeightNoiseImpactRange = 32;
+
+        //温度计算公式
+        public static int CalTemperature(int baseTemperature, int height)
+        {
+            if (height < MinHeight)
+            {
+                return baseTemperature;
+            }
+            else
+            {
+                var dropedPerMeter = 0.1f;
+                var t = baseTemperature - (int)((height - MinHeight) * dropedPerMeter);
+                return t;
+            }
+        }
     }
 }
