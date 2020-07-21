@@ -5,6 +5,13 @@ namespace Core
     {
         public int x, y, z;
 
+        public static Coord3Int up = new Coord3Int(0, 1, 0);
+        public static Coord3Int down = new Coord3Int(0, -1, 0);
+        public static Coord3Int left = new Coord3Int(-1, 0, 0);
+        public static Coord3Int right = new Coord3Int(1, 0, 0);
+        public static Coord3Int back = new Coord3Int(0, 0, -1);
+        public static Coord3Int forward = new Coord3Int(0, 0, 1);
+
         public Coord3Int(int x, int y, int z)
         {
             this.x = x;

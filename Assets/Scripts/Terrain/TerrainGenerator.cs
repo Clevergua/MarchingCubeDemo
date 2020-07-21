@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Terrain
 {
@@ -13,13 +14,15 @@ namespace Terrain
         public Layer result { get; private set; }
 
         public string currentOperation { get; private set; }
-        public bool isDone { get; private set; }
+        public bool isDone { get; private set; } = false;
+
+
         private int previousRandomNum;
-        public IEnumerator GenerateLayer(int seed, int worldLength, Action completed)
+        public IEnumerator GenerateLayer(int seed, int worldLength)
         {
             currentOperation = "正在生成环境图";
             progress = 10;
-
+            yield return null;
             var length = worldLength * Constants.ChunkLength;
             var height = Constants.WorldHeight * Constants.ChunkLength;
 
@@ -29,10 +32,10 @@ namespace Terrain
             var temperaturemap = new int[length, length];
             //湿度图
             var humiditymap = new int[length, length];
-            yield return FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
-
             currentOperation = "正在生成领地图";
             progress = 20;
+            yield return FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
+
 
             //领地图
             var territorymap = new int[length, length];
@@ -48,7 +51,7 @@ namespace Terrain
 
             currentOperation = "正在生成路径图";
             progress = 30;
-
+            yield return null;
             //路径信息
             var paths = new List<Path>();
             yield return GeneratePaths(paths, id2Territory, territorymap);
@@ -58,7 +61,7 @@ namespace Terrain
 
             currentOperation = "正在生成噪声图";
             progress = 50;
-
+            yield return null;
             //生成3D噪声图和凹洞的字典数据
             var blockmap = new byte[length, height, length];
             //处理后的数据:0:空 1:实体 2:凹洞
@@ -69,7 +72,13 @@ namespace Terrain
 
             currentOperation = "正在填充水和岩浆";
             progress = 70;
-            yield return FillPits(blockmap, biomeSelector, temperaturemap, humiditymap);
+            yield return null;
+            yield return FillPits(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
+
+            currentOperation = "正在创建地表";
+            progress = 70;
+            yield return null;
+            yield return CreateSurfaceLayer(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
 
             result = new Layer(blockmap);
             #region 生成图片查看结果
@@ -121,10 +130,26 @@ namespace Terrain
             System.IO.File.WriteAllBytes($"{Application.dataPath}/aa.png", bytes);
             #endregion
             progress = 100;
-            completed?.Invoke();
+            isDone = true;
         }
 
-        private IEnumerator FillPits(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap)
+        private IEnumerator CreateSurfaceLayer(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int seed)
+        {
+            var length = blockmap.GetLength(0);
+            for (int x = 0; x < length; x++)
+            {
+                for (int z = 0; z < length; z++)
+                {
+                    var altitudeTemperature = CalTemperature(temperaturemap[x, z], heightmap[x, z]);
+                    var humidity = humiditymap[x, z];
+                    var biome = biomeSelector.Select(altitudeTemperature, humidity);
+                    biome.Growing(blockmap, x, z, seed);
+                }
+                yield return null;
+            }
+        }
+
+        private IEnumerator FillPits(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int seed)
         {
             var length = blockmap.GetLength(0);
             var height = blockmap.GetLength(1);
@@ -138,41 +163,57 @@ namespace Terrain
                     for (int y = 0; y < height; y++)
                     {
                         var currentCoord = new Coord3Int(x, y, z);
-                        if (blockmap[x, y, z] == pit)
+                        //如果当前点是未处理过的凹洞
+                        if (blockmap[x, y, z] == pit && !processedPitCoords.Contains(currentCoord))
                         {
-                            if (!processedPitCoords.Contains(currentCoord))
+                            //选择一个生物群落来处理凹洞
+                            var altitudeTemperature = CalTemperature(temperaturemap[x, z], heightmap[x, z]);
+                            var humidity = humiditymap[x, z];
+                            var biome = biomeSelector.Select(altitudeTemperature, humidity);
+
+                            var pitCoordsGroup = new List<Coord3Int>();
+                            var queue = new Queue<Coord3Int>();
+                            queue.Enqueue(currentCoord);
+                            pitCoordsGroup.Add(currentCoord);
+                            processedPitCoords.Add(currentCoord);
+                            while (queue.Count > 0)
                             {
-                                var altitudeTemperature = CalTemperature(temperaturemap[x, z], heightmap[x, z]);
-                                var humidity = humiditymap[x, z];
-                                var biome = biomeSelector.Select(altitudeTemperature, humidity);
-                                var pitCoords = GetPitCoords(currentCoord, blockmap);
-                                foreach (var pitCoord in pitCoords)
+                                var current = queue.Dequeue();
+                                var neighbors = new Coord3Int[]
                                 {
-                                    processedPitCoords.Add(currentCoord);
+                                        new Coord3Int(current.x+1, current.y, current.z),
+                                        new Coord3Int(current.x-1, current.y, current.z),
+                                        new Coord3Int(current.x, current.y+1, current.z),
+                                        new Coord3Int(current.x, current.y-1, current.z),
+                                        new Coord3Int(current.x, current.y, current.z+1),
+                                        new Coord3Int(current.x, current.y, current.z-1)
+                                };
+                                foreach (var c in neighbors)
+                                {
+                                    if (c.x < 0 || c.y < 0 || c.z < 0 || c.x >= length || c.z >= length || c.y >= height)
+                                    {
+                                        //越界抛弃..
+                                    }
+                                    else
+                                    {
+                                        //当周围是凹洞且未被处理
+                                        if (blockmap[c.x, c.y, c.z] == pit && !processedPitCoords.Contains(c))
+                                        {
+                                            pitCoordsGroup.Add(c);
+                                            queue.Enqueue(c);
+                                            processedPitCoords.Add(c);
+                                        }
+                                    }
                                 }
                             }
-                            else
-                            {
-                                //Do nothing..
-                            }
+                            biome.ProcessPitCoords(pitCoordsGroup, blockmap, heightmap, seed);
+                            yield return null;
                         }
                     }
                 }
             }
         }
 
-        private IReadOnlyList<Coord3Int> GetPitCoords(Coord3Int startPoint, byte[,,] blockmap)
-        {
-            List<Coord3Int> pitCoords = new List<Coord3Int>();
-            var queue = new Queue<Coord3Int>();
-            var queue
-            queue.Enqueue(startPoint);
-            while (queue.Count > 0)
-            {
-                var current = queue.Dequeue();
-
-            }
-        }
 
         //温度计算公式
         private int CalTemperature(int baseTemperature, int height)
@@ -188,7 +229,6 @@ namespace Terrain
                 return t;
             }
         }
-
         private IEnumerator NoiseBlockmap(byte[,,] blockmap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
         {
             var length = blockmap.GetLength(0);

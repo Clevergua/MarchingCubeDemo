@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using Terrain;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -7,12 +8,10 @@ using UnityEngine.UI;
 public class GameLoop : MonoBehaviour
 {
     private int seed;
-    private Layer l;
     TerrainGenerator terrainGen;
     [SerializeField] Text text;
-    [SerializeField] GameObject prefab;
-    [SerializeField] GameObject waterPrefab;
-    [SerializeField] GameObject pathPrefab;
+    [SerializeField] List<GameObject> prefabs;
+    private bool hasShown = false;
 
     // Start is called before the first frame update
     void Start()
@@ -20,15 +19,11 @@ public class GameLoop : MonoBehaviour
         //Create level
         terrainGen = new TerrainGenerator();
         var seed = Random.Range(int.MinValue, int.MaxValue);
-        Debug.Log(seed);
-        StartCoroutine(terrainGen.GenerateLayer(0, 16, () =>
-        {
-            l = terrainGen.result;
-            StartCoroutine(Show());
-        }));
+        StartCoroutine(terrainGen.GenerateLayer(0, 16));
     }
     IEnumerator Show()
     {
+        var l = terrainGen.result;
         for (int x = 0 + 1; x < l.blockmap.GetLength(0) - 1; x++)
         {
             var parent = new GameObject();
@@ -36,30 +31,19 @@ public class GameLoop : MonoBehaviour
             {
                 for (int z = 0 + 1; z < l.blockmap.GetLength(2) - 1; z++)
                 {
-                    if (l.blockmap[x, y, z] == 0)
+                    if (l.blockmap[x, y, z] == (byte)BlockType.Air)
                     {
 
                     }
                     else
                     {
-                        if (l.blockmap[x + 1, y, z] != 0 && l.blockmap[x - 1, y, z] != 0 && l.blockmap[x, y + 1, z] != 0 && l.blockmap[x, y - 1, z] != 0 && l.blockmap[x, y, z - 1] != 0 && l.blockmap[x, y, z + 1] != 0)
+                        if (l.blockmap[x + 1, y, z] != (byte)BlockType.Air && l.blockmap[x - 1, y, z] != (byte)BlockType.Air && l.blockmap[x, y + 1, z] != (byte)BlockType.Air && l.blockmap[x, y - 1, z] != (byte)BlockType.Air && l.blockmap[x, y, z - 1] != (byte)BlockType.Air && l.blockmap[x, y, z + 1] != (byte)BlockType.Air)
                         {
 
                         }
                         else
                         {
-                            if (l.blockmap[x, y, z] == 1)
-                            {
-                                var go = Instantiate(prefab, new Vector3(x, y, z), Quaternion.identity, parent.transform);
-                            }
-                            else if (l.blockmap[x, y, z] == 2)
-                            {
-                                var go = Instantiate(waterPrefab, new Vector3(x, y, z), Quaternion.identity, parent.transform);
-                            }
-                            else if (l.blockmap[x, y, z] == 3)
-                            {
-                                var go = Instantiate(pathPrefab, new Vector3(x, y, z), Quaternion.identity, parent.transform);
-                            }
+                            Instantiate(prefabs[l.blockmap[x, y, z]], new Vector3(x, y, z), Quaternion.identity, parent.transform);
                         }
                     }
                 }
@@ -71,6 +55,10 @@ public class GameLoop : MonoBehaviour
     private void Update()
     {
         text.text = $"{terrainGen.currentOperation}::{terrainGen.progress}";
-
+        if (terrainGen.isDone && !hasShown)
+        {
+            hasShown = true;
+            StartCoroutine(Show());
+        }
     }
 }
