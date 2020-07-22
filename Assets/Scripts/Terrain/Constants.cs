@@ -36,6 +36,7 @@ namespace Terrain
             {
                 var dropedPerMeter = 0.1f;
                 var t = baseTemperature - (int)((height - MinHeight) * dropedPerMeter);
+                t = t < 0 ? 0 : t;
                 return t;
             }
         }

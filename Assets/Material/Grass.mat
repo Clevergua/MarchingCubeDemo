@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Grass
-  m_Shader: {fileID: 4800000, guid: e25f38b445e2bbb49a2bc838a73aa938, type: 3}
+  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -80,7 +80,7 @@ Material:
     - _WindFrequency: 0.5
     - _ZWrite: 1
     m_Colors:
-    - _Color: {r: 0.6226415, g: 0.4344355, b: 0.10279457, a: 1}
+    - _Color: {r: 0.1548594, g: 0.5660378, b: 0.18826987, a: 1}
     - _Color0: {r: 0.035577852, g: 0.20754719, b: 0.022516916, a: 1}
     - _Color1: {r: 0.14431292, g: 0.6509434, b: 0.20863329, a: 1}
     - _Color2: {r: 0, g: 1, b: 0.0022239685, a: 1}

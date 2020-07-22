@@ -40,11 +40,14 @@ namespace Terrain
             {
                 if (y > 0 && blockmap[x, y - 1, z] == (byte)BlockType.Dirt)
                 {
-                    var t = Constants.CalTemperature(temperaturemap[x, z], y);
-                    var h = humiditymap[x, z];
-                    if (t > 45 & t < 55 & h > 45 & h < 55)
+                    var r = RNG.Random3(x, y, z, seed - 223) % 50 + 50;
+                    if (r < 10)
                     {
-                        blockmap[x, y, z] = (int)BlockType.Grass;
+
+                    }
+                    else if (r < 70)
+                    {
+                        blockmap[x, y, z] = (byte)BlockType.Grass;
                     }
                 }
             }

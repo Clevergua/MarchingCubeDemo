@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Terrain
 {
@@ -6,7 +7,7 @@ namespace Terrain
     {
         private GrassLand grassLand;
         private SnowyLand snowyLand;
-        public BiomeSelector()
+        public BiomeSelector(IReadOnlyList<Biome> biomeLibrary)
         {
             grassLand = new GrassLand();
             snowyLand = new SnowyLand();
@@ -21,7 +22,6 @@ namespace Terrain
             else
             {
                 return grassLand;
-
             }
         }
     }
