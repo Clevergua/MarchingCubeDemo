@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
+using Core;
 using NUnit.Framework;
 using Terrain;
 using UnityEngine;
@@ -11,29 +11,132 @@ namespace Tests
     {
         // A Test behaves as an ordinary method
         [Test]
-        public void TerrainTestSimplePasses()
-        {
-            var i = -1;
-            byte b1 = (byte)i;
-            byte b2 = 255;
-            Debug.Log($"{b1 == b2}");
-            //var terrainGenerator = new TerrainGenerator();
-            //var temperateLayer = new TemperateLayer();
-            //Biome tropicalLayer = new TropicalLayer();
-            //var layer = terrainGenerator.CreateLayer(0, 16, temperateLayer);
-            //var a = Vector3.one * 6;
-            //var terrainGen = new TerrainGenerator();
-            //var seed = Random.Range(int.MinValue, int.MaxValue);
-            //Debug.Log(seed);
-            //terrainGen.CreateLayer(seed, 64);
-        }
+        public void TerrainTestSimplePasses() { }
+
 
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         // `yield return null;` to skip a frame.
         [UnityTest]
-        public IEnumerator TerrainTestWithEnumeratorPasses()
+        public IEnumerator 测试二维噪声概率()
         {
+            var sampleCount = 10000;
+            var density = 0.01f;
+            var range2Count = new int[10];
+            for (int x = 0; x < sampleCount; x++)
+            {
+                for (int y = 0; y < sampleCount; y++)
+                {
+                    var value = PerlinNoise.PerlinNoise2D(12, x * density, y * density);
+                    if (value < -0.8f)
+                    {
+                        range2Count[0] += 1;
+                    }
+                    else if (value < -0.6f)
+                    {
+                        range2Count[1] += 1;
+                    }
+                    else if (value < -0.4f)
+                    {
+                        range2Count[2] += 1;
+                    }
+                    else if (value < -0.2f)
+                    {
+                        range2Count[3] += 1;
+                    }
+                    else if (value < 0f)
+                    {
+                        range2Count[4] += 1;
+                    }
+                    else if (value < 0.2f)
+                    {
+                        range2Count[5] += 1;
+                    }
+                    else if (value < 0.4f)
+                    {
+                        range2Count[6] += 1;
+                    }
+                    else if (value < 0.6f)
+                    {
+                        range2Count[7] += 1;
+                    }
+                    else if (value < 0.8f)
+                    {
+                        range2Count[8] += 1;
+                    }
+                    else
+                    {
+                        range2Count[9] += 1;
+                    }
+                }
+                yield return null;
+            }
+            for (int i = 0; i < range2Count.Length; i++)
+            {
+                Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount) * 100}%");
+            }
+        }
+        // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
+        // `yield return null;` to skip a frame.
+        [UnityTest]
+        public IEnumerator 测试二维随机数()
+        {
+            var sampleCount = 100;
+            var range2Count = new int[10];
+            for (int x = 0; x < sampleCount; x++)
+            {
+                for (int y = 0; y < sampleCount; y++)
+                {
+                    var r = RNG.Random2(x, y, Random.Range(int.MinValue, int.MaxValue));
+                    var value = r % 50 + 50;
+
+                    if (value < 10)
+                    {
+                        range2Count[0] += 1;
+                    }
+                    else if (value < 20)
+                    {
+                        range2Count[1] += 1;
+                    }
+                    else if (value < 30)
+                    {
+                        range2Count[2] += 1;
+                    }
+                    else if (value < 40)
+                    {
+                        range2Count[3] += 1;
+                    }
+                    else if (value < 50)
+                    {
+                        range2Count[4] += 1;
+                    }
+                    else if (value < 60)
+                    {
+                        range2Count[5] += 1;
+                    }
+                    else if (value < 70)
+                    {
+                        range2Count[6] += 1;
+                    }
+                    else if (value < 80)
+                    {
+                        range2Count[7] += 1;
+                    }
+                    else if (value < 90)
+                    {
+                        range2Count[8] += 1;
+                    }
+                    else
+                    {
+                        range2Count[9] += 1;
+                    }
+                }
+            }
             yield return null;
+
+            for (int i = 0; i < range2Count.Length; i++)
+            {
+                Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount) * 100}%");
+            }
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Core
         };
 
 
-        private static float Lerp(float a, float b, float t)
+        private static float SmoothLerp(float a, float b, float t)
         {
             t = t * t * t * (6 * t * t - 15 * t + 10);
             return a + (b - a) * t;
@@ -71,11 +71,11 @@ namespace Core
             float n0, n1, ix0, ix1, value;
             n0 = DotGridGradient2D(x0, y0, x, y, seed);
             n1 = DotGridGradient2D(x1, y0, x, y, seed);
-            ix0 = Lerp(n0, n1, sx);
+            ix0 = SmoothLerp(n0, n1, sx);
             n0 = DotGridGradient2D(x0, y1, x, y, seed);
             n1 = DotGridGradient2D(x1, y1, x, y, seed);
-            ix1 = Lerp(n0, n1, sx);
-            value = Lerp(ix0, ix1, sy);
+            ix1 = SmoothLerp(n0, n1, sx);
+            value = SmoothLerp(ix0, ix1, sy);
 
             return value;
         }
@@ -94,15 +94,15 @@ namespace Core
             float sy = y - y0;
             float sz = z - z0;
             // Interpolate between grid point gradients
-            float xf00 = Lerp(DotGridGradient3D(x0, y0, z0, x, y, z, seed), DotGridGradient3D(x1, y0, z0, x, y, z, seed), sx);
-            float xf10 = Lerp(DotGridGradient3D(x0, y1, z0, x, y, z, seed), DotGridGradient3D(x1, y1, z0, x, y, z, seed), sx);
-            float xf01 = Lerp(DotGridGradient3D(x0, y0, z1, x, y, z, seed), DotGridGradient3D(x1, y0, z1, x, y, z, seed), sx);
-            float xf11 = Lerp(DotGridGradient3D(x0, y1, z1, x, y, z, seed), DotGridGradient3D(x1, y1, z1, x, y, z, seed), sx);
+            float xf00 = SmoothLerp(DotGridGradient3D(x0, y0, z0, x, y, z, seed), DotGridGradient3D(x1, y0, z0, x, y, z, seed), sx);
+            float xf10 = SmoothLerp(DotGridGradient3D(x0, y1, z0, x, y, z, seed), DotGridGradient3D(x1, y1, z0, x, y, z, seed), sx);
+            float xf01 = SmoothLerp(DotGridGradient3D(x0, y0, z1, x, y, z, seed), DotGridGradient3D(x1, y0, z1, x, y, z, seed), sx);
+            float xf11 = SmoothLerp(DotGridGradient3D(x0, y1, z1, x, y, z, seed), DotGridGradient3D(x1, y1, z1, x, y, z, seed), sx);
 
-            float yf0 = Lerp(xf00, xf10, sy);
-            float yf1 = Lerp(xf01, xf11, sy);
+            float yf0 = SmoothLerp(xf00, xf10, sy);
+            float yf1 = SmoothLerp(xf01, xf11, sy);
 
-            return Lerp(yf0, yf1, sz);
+            return SmoothLerp(yf0, yf1, sz);
         }
         public static float SuperimposedOctave3D(int seed, float x, float y, float z, int superposition = 1)
         {

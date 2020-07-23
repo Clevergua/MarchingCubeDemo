@@ -5,10 +5,6 @@ namespace Terrain
 {
     public abstract class Biome
     {
-        internal abstract RangeInt TemperatureRange { get; }
-        internal abstract RangeInt HumidityRange { get; }
-        internal abstract int Rarity { get; }
-
         internal abstract void ProcessPitCoords(IReadOnlyList<Coord3Int> pitCoordsGroup, byte[,,] blockmap, int[,] heightmap, int seed);
         internal abstract void Growing(byte[,,] blockmap, int x, int z, int seed);
         internal abstract void Planting(byte[,,] blockmap, int x, int z, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed);

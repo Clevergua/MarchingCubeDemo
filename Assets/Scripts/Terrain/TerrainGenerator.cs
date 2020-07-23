@@ -69,7 +69,7 @@ namespace Terrain
             yield return NoiseBlockmap(blockmap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
 
             //生成生物群落数据
-            var biomeSelector = new BiomeSelector();
+            var biomeSelector = new BiomeSelector(null);
 
             currentOperation = "正在填充水和岩浆";
             progress = 70;

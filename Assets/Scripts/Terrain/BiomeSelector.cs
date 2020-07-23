@@ -7,7 +7,7 @@ namespace Terrain
     {
         private GrassLand grassLand;
         private SnowyLand snowyLand;
-        public BiomeSelector(IReadOnlyList<Biome> biomeLibrary)
+        public BiomeSelector(IReadOnlyDictionary<EnvironmentDegree,Biome> biomeLibrary)
         {
             grassLand = new GrassLand();
             snowyLand = new SnowyLand();
