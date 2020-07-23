@@ -55,7 +55,21 @@ namespace Core
             Coord3Int gradient = GetGradient3D(ix, iy, iz, seed);
             return dx * gradient.x + dy * gradient.y + dz * gradient.z;
         }
-
+        /// <summary>
+        /// 范围约为-0.633~0.633
+        /// 返回时候可以根据需求通过*1.578955678714098将值定在-1~1,此时占比约算:
+        /// -1~-0.8 : 2.2%
+        /// -0.8~-0.6 : 9.0%
+        /// -0.6~-0.4 : 9.2%
+        /// -0.4~-0.2 : 12.8%
+        /// -0.2~0 : 16.6%
+        /// ...整数与之对称
+        /// 0.8~1 : 2.2%
+        /// </summary>
+        /// <param name="seed"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
         public static float PerlinNoise2D(int seed, float x, float y)
         {
             // Determine grid cell coordinates

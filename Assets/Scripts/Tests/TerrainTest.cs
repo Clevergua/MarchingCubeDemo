@@ -20,13 +20,17 @@ namespace Tests
         public IEnumerator 测试二维噪声概率()
         {
             var sampleCount = 10000;
-            var density = 0.01f;
+            var density = 0.0007f;
             var range2Count = new int[10];
+            var min = 0f;
+            var max = 0f;
             for (int x = 0; x < sampleCount; x++)
             {
                 for (int y = 0; y < sampleCount; y++)
                 {
-                    var value = PerlinNoise.PerlinNoise2D(12, x * density, y * density);
+                    var value = PerlinNoise.PerlinNoise2D(Random.Range(int.MinValue, int.MaxValue), x * density, y * density) * 1.5789f;
+                    var t = (value * value);
+                    value *= 1.4f - 0.4f * t;
                     if (value < -0.8f)
                     {
                         range2Count[0] += 1;
@@ -67,6 +71,8 @@ namespace Tests
                     {
                         range2Count[9] += 1;
                     }
+                    min = value < min ? value : min;
+                    max = value > max ? value : max;
                 }
                 yield return null;
             }
@@ -74,6 +80,7 @@ namespace Tests
             {
                 Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount) * 100}%");
             }
+            Debug.Log($"Min:{min}, Max:{max}");
         }
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         // `yield return null;` to skip a frame.

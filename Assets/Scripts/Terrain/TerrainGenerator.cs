@@ -713,15 +713,26 @@ namespace Terrain
                 for (int z = 0; z < length; z++)
                 {
                     var heightNoiseDensity = 0.013f;
-                    var heightNoise = PerlinNoise.PerlinNoise2D(seed + 1232, x * heightNoiseDensity, z * heightNoiseDensity) * 0.5f + 0.5f;
+                    var heightNoise = PerlinNoise.PerlinNoise2D(seed + 1232, x * heightNoiseDensity, z * heightNoiseDensity) * 1.578f * 0.5f + 0.5f;
                     heightmap[x, z] = (int)(Mathf.Lerp(Constants.MinHeight, Constants.MaxHeight, heightNoise));
 
+
+
                     var temperatureNoiseDensity = 0.003f;
-                    var temperatureNoise = PerlinNoise.PerlinNoise2D(seed + 8674, x * temperatureNoiseDensity, z * temperatureNoiseDensity) * 0.5f + 0.5f;
+                    var temperatureNoise = PerlinNoise.PerlinNoise2D(seed + 8674, x * temperatureNoiseDensity, z * temperatureNoiseDensity) * 1.578f;
+                    //下面两步处理是为了让噪声分布结果平均
+                    var t1 = temperatureNoise * temperatureNoise;
+                    temperatureNoise *= 1.4f - 0.4f * t1;
+
+                    temperatureNoise = temperatureNoise * 0.5f + 0.5f;
                     temperaturemap[x, z] = (int)(Mathf.Lerp(Constants.MinTemperature, Constants.MaxTemperature, temperatureNoise));
 
                     var humidityNoiseDensity = 0.003f;
-                    var humidityNoise = PerlinNoise.PerlinNoise2D(seed + 96, x * humidityNoiseDensity, z * humidityNoiseDensity) * 0.5f + 0.5f;
+                    var humidityNoise = PerlinNoise.PerlinNoise2D(seed + 96, x * humidityNoiseDensity, z * humidityNoiseDensity) * 1.578f;
+                    var t2 = humidityNoise * humidityNoise;
+                    humidityNoise *= 1.4f - 0.4f * t2;
+
+                    humidityNoise = humidityNoise * 0.5f + 0.5f;
                     humiditymap[x, z] = (int)(Mathf.Lerp(Constants.MinHumidity, Constants.MaxHumidity, humidityNoise));
                 }
                 yield return null;

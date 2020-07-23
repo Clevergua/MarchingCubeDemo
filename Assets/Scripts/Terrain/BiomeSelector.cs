@@ -15,7 +15,7 @@ namespace Terrain
 
         internal Biome Select(int altitudeTemperature, int humidity)
         {
-            if (altitudeTemperature < 30 || altitudeTemperature > 70)
+            if (altitudeTemperature < 25 || altitudeTemperature > 75)
             {
                 return snowyLand;
             }
