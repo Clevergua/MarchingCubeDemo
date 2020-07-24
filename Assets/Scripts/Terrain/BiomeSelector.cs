@@ -1,27 +1,63 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Runtime.InteropServices.ComTypes;
 
 namespace Terrain
 {
     internal class BiomeSelector
     {
-        private GrassLand grassLand;
-        private SnowyLand snowyLand;
-        public BiomeSelector(IReadOnlyDictionary<EnvironmentDegree,Biome> biomeLibrary)
+        private IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome;
+
+        public BiomeSelector(IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome)
         {
-            grassLand = new GrassLand();
-            snowyLand = new SnowyLand();
+            this.environmentDegree2Biome = environmentDegree2Biome;
         }
 
         internal Biome Select(int altitudeTemperature, int humidity)
         {
-            if (altitudeTemperature < 25 || altitudeTemperature > 75)
+            if (altitudeTemperature < 33)
             {
-                return snowyLand;
+                if (humidity < 33)
+                {
+                    return environmentDegree2Biome[EnvironmentDegree.LowTemperatureLowHumidity];
+                }
+                else if (humidity < 66)
+                {
+                    return environmentDegree2Biome[EnvironmentDegree.LowTemperatureMediumHumidity];
+                }
+                else
+                {
+                    return environmentDegree2Biome[EnvironmentDegree.LowTemperatureHighHumidity];
+                }
+            }
+            else if (altitudeTemperature < 66)
+            {
+                if (humidity < 33)
+                {
+                    return environmentDegree2Biome[EnvironmentDegree.MediumTemperatureLowHumidity];
+                }
+                else if (humidity < 66)
+                {
+                    return environmentDegree2Biome[EnvironmentDegree.MediumTemperatureLowHumidity];
+                }
+                else
+                {
+                    return environmentDegree2Biome[EnvironmentDegree.MediumTemperatureLowHumidity];
+                }
             }
             else
             {
-                return grassLand;
+                if (humidity < 33)
+                {
+                    return environmentDegree2Biome[EnvironmentDegree.HighTemperatureLowHumidity];
+                }
+                else if (humidity < 66)
+                {
+                    return environmentDegree2Biome[EnvironmentDegree.HighTemperatureLowHumidity];
+                }
+                else
+                {
+                    return environmentDegree2Biome[EnvironmentDegree.HighTemperatureLowHumidity];
+                }
             }
         }
     }

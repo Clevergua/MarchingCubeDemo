@@ -1,9 +1,5 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Core;
-using UnityEngine.UIElements;
-using System;
 
 namespace Terrain
 {
@@ -18,7 +14,6 @@ namespace Terrain
             var topDepth = (int)(noise * depthRange + minDepth);
             var temp = topDepth;
             var height = blockmap.GetLength(1);
-
             for (int y = height - 1; y >= 0; y--)
             {
                 if (blockmap[x, y, z] == (byte)BlockType.Air)
@@ -45,7 +40,7 @@ namespace Terrain
                     {
 
                     }
-                    else if (r < 70)
+                    else if (r < 60)
                     {
                         blockmap[x, y, z] = (byte)BlockType.Grass;
                     }

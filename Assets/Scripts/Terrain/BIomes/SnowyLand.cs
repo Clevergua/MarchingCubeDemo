@@ -10,7 +10,7 @@ namespace Terrain
         internal override void Growing(byte[,,] blockmap, int x, int z, int seed)
         {
             var density = 0.007f;
-            var noise = (PerlinNoise.PerlinNoise2D(seed, x * density, z * density) + 1) * 0.5f;
+            var noise = (PerlinNoise.PerlinNoise2D(seed, x * density, z * density) * 1.578f + 1) * 0.5f;
             var depthRange = 4;
             var minDepth = 0;
             var topDepth = (int)(noise * depthRange + minDepth);
@@ -33,7 +33,7 @@ namespace Terrain
 
         internal override void Planting(byte[,,] blockmap, int x, int z, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
         {
-            
+
         }
 
         internal override void ProcessPitCoords(IReadOnlyList<Coord3Int> pitCoordsGroup, byte[,,] blockmap, int[,] heightmap, int seed)
