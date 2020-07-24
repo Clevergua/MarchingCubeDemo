@@ -1,0 +1,13 @@
+C:\Users\Guagua\source\repos\VoxTranslator\bin\Debug\netcoreapp3.1\VoxTranslator.exe
+C:\Users\Guagua\source\repos\VoxTranslator\bin\Debug\netcoreapp3.1\VoxTranslator.deps.json
+C:\Users\Guagua\source\repos\VoxTranslator\bin\Debug\netcoreapp3.1\VoxTranslator.runtimeconfig.json
+C:\Users\Guagua\source\repos\VoxTranslator\bin\Debug\netcoreapp3.1\VoxTranslator.runtimeconfig.dev.json
+C:\Users\Guagua\source\repos\VoxTranslator\bin\Debug\netcoreapp3.1\VoxTranslator.dll
+C:\Users\Guagua\source\repos\VoxTranslator\bin\Debug\netcoreapp3.1\VoxTranslator.pdb
+C:\Users\Guagua\source\repos\VoxTranslator\obj\Debug\netcoreapp3.1\VoxTranslator.csprojAssemblyReference.cache
+C:\Users\Guagua\source\repos\VoxTranslator\obj\Debug\netcoreapp3.1\VoxTranslator.AssemblyInfoInputs.cache
+C:\Users\Guagua\source\repos\VoxTranslator\obj\Debug\netcoreapp3.1\VoxTranslator.AssemblyInfo.cs
+C:\Users\Guagua\source\repos\VoxTranslator\obj\Debug\netcoreapp3.1\VoxTranslator.csproj.CoreCompileInputs.cache
+C:\Users\Guagua\source\repos\VoxTranslator\obj\Debug\netcoreapp3.1\VoxTranslator.dll
+C:\Users\Guagua\source\repos\VoxTranslator\obj\Debug\netcoreapp3.1\VoxTranslator.pdb
+C:\Users\Guagua\source\repos\VoxTranslator\obj\Debug\netcoreapp3.1\VoxTranslator.genruntimeconfig.cache

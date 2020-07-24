@@ -1,0 +1,8 @@
+{
+  "runtimeOptions": {
+    "additionalProbingPaths": [
+      "C:\\Users\\Guagua\\.dotnet\\store\\|arch|\\|tfm|",
+      "C:\\Users\\Guagua\\.nuget\\packages"
+    ]
+  }
+}
