@@ -19,6 +19,7 @@ public class GameLoop : MonoBehaviour
         //Create level
         terrainGen = new TerrainGenerator();
         var seed = Random.Range(int.MinValue, int.MaxValue);
+        Debug.Log(seed);
         StartCoroutine(terrainGen.GenerateLayer(seed, 16));
     }
     IEnumerator Show()
@@ -44,6 +45,10 @@ public class GameLoop : MonoBehaviour
                         else
                         {
                             Instantiate(prefabs[l.blockmap[x, y, z]], new Vector3(x, y, z), Quaternion.identity, parent.transform);
+                        }
+                        if (true)
+                        {
+
                         }
                     }
                 }

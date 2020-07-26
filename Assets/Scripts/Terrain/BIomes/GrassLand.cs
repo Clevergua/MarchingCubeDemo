@@ -3,6 +3,7 @@ using Core;
 
 namespace Terrain
 {
+
     public class GrassLand : Biome
     {
         internal override void Growing(byte[,,] blockmap, int x, int z, int seed)
@@ -27,23 +28,58 @@ namespace Terrain
                 }
             }
         }
+        Structure oak = new Oak();
 
         internal override void Planting(byte[,,] blockmap, int x, int z, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
         {
             var height = blockmap.GetLength(1);
+            var r = RNG.Random2(x, z, seed - 223) % 500 + 500;
             for (int y = 0; y < height; y++)
             {
-                if (y > 0 && blockmap[x, y - 1, z] == (byte)BlockType.Dirt)
+                if (blockmap[x, y, z] == (byte)BlockType.Air && y > 0 && blockmap[x, y - 1, z] == (byte)BlockType.Dirt)
                 {
-                    var r = RNG.Random3(x, y, z, seed - 223) % 50 + 50;
                     if (r < 10)
                     {
-
+                        if (territorymap[x, z] == -1)
+                        {
+                            //领地内不种树
+                        }
+                        else
+                        {
+                            var coord = new Coord3Int(x, y, z);
+                            StructureData data = oak.GetStructureData(blockmap, coord, seed);
+                            if (data.StartPoint.x < 0 || data.StartPoint.x + data.Coord2Block.GetLength(0) > blockmap.GetLength(0) ||
+                                data.StartPoint.y < 0 || data.StartPoint.y + data.Coord2Block.GetLength(1) > blockmap.GetLength(1) ||
+                                data.StartPoint.z < 0 || data.StartPoint.z + data.Coord2Block.GetLength(2) > blockmap.GetLength(2))
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                for (int lx = 0; lx < data.Coord2Block.GetLength(0); lx++)
+                                {
+                                    for (int ly = 0; ly < data.Coord2Block.GetLength(1); ly++)
+                                    {
+                                        for (int lz = 0; lz < data.Coord2Block.GetLength(2); lz++)
+                                        {
+                                            var wx = data.StartPoint.x + lx;
+                                            var wy = data.StartPoint.y + ly;
+                                            var wz = data.StartPoint.z + lz;
+                                            if (data.Coord2Block[lx, ly, lz] != (byte)BlockType.Air && blockmap[wx, wy, wz] == (byte)BlockType.Air)
+                                            {
+                                                blockmap[wx, wy, wz] = data.Coord2Block[lx, ly, lz];
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    else if (r < 60)
+                    else if (r < 600)
                     {
                         blockmap[x, y, z] = (byte)BlockType.Grass;
                     }
+                    break;
                 }
             }
         }

@@ -42,9 +42,10 @@ namespace Terrain
             //领地表
             var id2Territory = new List<Territory>();
             var territorySeed = seed;
-            if (!TryFillTerritorymap(territorySeed, territorymap, id2Territory))
+            while (!TryFillTerritorymap(territorySeed, territorymap, id2Territory))
             {
-                throw new Exception($"Try to fill the territory too many times");
+                Debug.Log($"Attempt to add territormap failed");
+                territorySeed++;
             }
             var times = territorySeed - seed + 1;
             Debug.Log($"Try to fill the territory {times} times");
@@ -134,6 +135,7 @@ namespace Terrain
             System.IO.File.WriteAllBytes($"{Application.dataPath}/aa.png", bytes);
             #endregion
             progress = 100;
+
             isDone = true;
         }
 
@@ -152,7 +154,6 @@ namespace Terrain
                 yield return null;
             }
         }
-
 
         private IEnumerator CreateSurfaceLayer(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int seed)
         {
@@ -594,16 +595,17 @@ namespace Terrain
                 while (true)
                 {
                     numOfAttempts++;
-                    if (numOfAttempts < 64)
+                    if (numOfAttempts < 8)
                     {
                         if (TrySetTerritory(territory, territorymap, id2Territory, seed)) { break; }
                     }
                     else
                     {
-                        Debug.Log("The map is too small");
+                        Debug.Log(numOfAttempts);
                         return false;
                     }
                 }
+                Debug.Log(numOfAttempts);
             }
             //产生领地集合
             var normalTerritories = new List<NormalTerritory>();
@@ -627,18 +629,18 @@ namespace Terrain
                 while (true)
                 {
                     numOfAttempts++;
-                    if (numOfAttempts < 128)
+                    if (numOfAttempts < 16)
                     {
                         if (TrySetTerritory(territory, territorymap, id2Territory, seed)) { break; }
                     }
                     else
                     {
-                        Debug.Log("The map is too small");
-                        success = false;
+                        Debug.Log(numOfAttempts);
+                        return false;
                     }
                 }
+                Debug.Log(numOfAttempts);
             }
-
             return success;
         }
         private bool TrySetTerritory(Territory territory, int[,] territorymap, List<Territory> id2Territory, int seed)
@@ -711,7 +713,7 @@ namespace Terrain
             {
                 for (int z = 0; z < length; z++)
                 {
-                    var heightNoiseDensity = 0.013f;
+                    var heightNoiseDensity = 0.007f;
                     var heightNoise = PerlinNoise.PerlinNoise2D(seed + 1232, x * heightNoiseDensity, z * heightNoiseDensity) * 1.578f * 0.5f + 0.5f;
                     heightmap[x, z] = (int)(Mathf.Lerp(Constants.MinHeight, Constants.MaxHeight, heightNoise));
 

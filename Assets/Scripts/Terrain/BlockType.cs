@@ -12,5 +12,7 @@
         Ice = 5,
         Snow = 6,
         Grass = 7,
+        Wood = 8,
+        Leaf = 9,
     }
 }

@@ -145,5 +145,71 @@ namespace Tests
                 Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount) * 100}%");
             }
         }
+
+        [UnityTest]
+        public IEnumerator 测试三维随机数()
+        {
+            var sampleCount = 1000;
+            var range2Count = new int[10];
+            for (int x = 0; x < sampleCount; x++)
+            {
+                for (int y = 0; y < 256; y++)
+                {
+                    for (int z = 0; z < sampleCount; z++)
+                    {
+                        var r = RNG.Random3(x, y, z, 3254);
+                        var value = r % 50 + 50;
+
+                        if (value < 10)
+                        {
+                            range2Count[0] += 1;
+                        }
+                        else if (value < 20)
+                        {
+                            range2Count[1] += 1;
+                        }
+                        else if (value < 30)
+                        {
+                            range2Count[2] += 1;
+                        }
+                        else if (value < 40)
+                        {
+                            range2Count[3] += 1;
+                        }
+                        else if (value < 50)
+                        {
+                            range2Count[4] += 1;
+                        }
+                        else if (value < 60)
+                        {
+                            range2Count[5] += 1;
+                        }
+                        else if (value < 70)
+                        {
+                            range2Count[6] += 1;
+                        }
+                        else if (value < 80)
+                        {
+                            range2Count[7] += 1;
+                        }
+                        else if (value < 90)
+                        {
+                            range2Count[8] += 1;
+                        }
+                        else
+                        {
+                            range2Count[9] += 1;
+                        }
+                    }
+
+                }
+            }
+            yield return null;
+
+            for (int i = 0; i < range2Count.Length; i++)
+            {
+                Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount * 256) * 100}%");
+            }
+        }
     }
 }
