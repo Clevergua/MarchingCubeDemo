@@ -1,13 +1,10 @@
 ﻿using Core;
-using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Terrain
 {
     internal class Oak : Structure
     {
-
         internal override StructureData GetStructureData(byte[,,] blockmap, Coord3Int pivot, int seed)
         {
             var wood = (byte)BlockType.Wood;

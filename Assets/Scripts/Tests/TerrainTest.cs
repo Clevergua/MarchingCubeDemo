@@ -11,7 +11,11 @@ namespace Tests
     {
         // A Test behaves as an ordinary method
         [Test]
-        public void TerrainTestSimplePasses() { }
+        public void TerrainTestSimplePasses()
+        {
+            var folderPath = System.IO.Path.Combine(Application.streamingAssetsPath, "StructureData");
+            Debug.Log(folderPath);
+        }
 
 
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use

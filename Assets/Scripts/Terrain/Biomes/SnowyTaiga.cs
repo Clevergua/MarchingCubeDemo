@@ -1,12 +1,12 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Core;
 
 namespace Terrain
 {
-    public class SnowyLand : Biome
+    internal class SnowyLand : Biome
     {
+        public SnowyLand(StructureFactory structureFactory) : base(structureFactory) { }
+
         internal override void Growing(byte[,,] blockmap, int x, int z, int seed)
         {
             var density = 0.007f;

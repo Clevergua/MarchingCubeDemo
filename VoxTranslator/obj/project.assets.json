@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Guagua\\source\\repos\\VoxTranslator\\VoxTranslator.csproj",
+      "projectUniqueName": "C:\\Users\\Guagua\\Documents\\GitHub\\Abyss\\VoxTranslator\\VoxTranslator.csproj",
       "projectName": "VoxTranslator",
-      "projectPath": "C:\\Users\\Guagua\\source\\repos\\VoxTranslator\\VoxTranslator.csproj",
+      "projectPath": "C:\\Users\\Guagua\\Documents\\GitHub\\Abyss\\VoxTranslator\\VoxTranslator.csproj",
       "packagesPath": "C:\\Users\\Guagua\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Guagua\\source\\repos\\VoxTranslator\\obj\\",
+      "outputPath": "C:\\Users\\Guagua\\Documents\\GitHub\\Abyss\\VoxTranslator\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Guagua\\AppData\\Roaming\\NuGet\\NuGet.Config",

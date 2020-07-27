@@ -2,11 +2,22 @@
 using CsharpVoxReader.Chunks;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace VoxTranslator
 {
     class VoxelLoader : IVoxLoader
     {
+        private string rootPath;
+        private string fileName;
+
+        public VoxelLoader(string rootPath, string fileName)
+        {
+            this.fileName = fileName;
+            this.rootPath = rootPath;
+        }
+
         public void LoadModel(int sizeX, int sizeY, int sizeZ, byte[,,] data)
         {
             Console.WriteLine($"({sizeX},{sizeY},{sizeZ})");
@@ -20,6 +31,19 @@ namespace VoxTranslator
                     }
                 }
             }
+            var path = Path.Combine(rootPath, $"{Path.GetFileNameWithoutExtension(fileName)}.dat");
+
+            // Delete old file, if it exists
+            if (File.Exists(path))
+            {
+                Console.WriteLine($"Deleting old file:{path}");
+                File.Delete(path);
+            }
+
+            FileStream stream = File.Create(path);
+            var formatter = new BinaryFormatter();
+            formatter.Serialize(stream, data);
+            stream.Close();
         }
 
         public void LoadPalette(uint[] palette)

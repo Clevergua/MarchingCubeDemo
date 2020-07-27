@@ -3,9 +3,10 @@ using Core;
 
 namespace Terrain
 {
-
-    public class GrassLand : Biome
+    internal class GrassLand : Biome
     {
+        public GrassLand(StructureFactory structureFactory) : base(structureFactory) { }
+
         internal override void Growing(byte[,,] blockmap, int x, int z, int seed)
         {
             var density = 0.007f;
@@ -28,7 +29,6 @@ namespace Terrain
                 }
             }
         }
-        Structure oak = new Oak();
 
         internal override void Planting(byte[,,] blockmap, int x, int z, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
         {
@@ -47,6 +47,7 @@ namespace Terrain
                         else
                         {
                             var coord = new Coord3Int(x, y, z);
+                            var oak = structureFactory.GetStructure<Oak>();
                             StructureData data = oak.GetStructureData(blockmap, coord, seed);
                             if (data.StartPoint.x < 0 || data.StartPoint.x + data.Coord2Block.GetLength(0) > blockmap.GetLength(0) ||
                                 data.StartPoint.y < 0 || data.StartPoint.y + data.Coord2Block.GetLength(1) > blockmap.GetLength(1) ||

@@ -1,10 +1,17 @@
 ﻿using Core;
+using System;
 using System.Collections.Generic;
 
 namespace Terrain
 {
-    public abstract class Biome
+    internal abstract class Biome
     {
+        public Biome(StructureFactory structureFactory)
+        {
+            this.structureFactory = structureFactory ?? throw new ArgumentNullException();
+        }
+        protected StructureFactory structureFactory;
+
         internal abstract void ProcessPitCoords(IReadOnlyList<Coord3Int> pitCoordsGroup, byte[,,] blockmap, int[,] heightmap, int seed);
         internal abstract void Growing(byte[,,] blockmap, int x, int z, int seed);
         internal abstract void Planting(byte[,,] blockmap, int x, int z, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed);

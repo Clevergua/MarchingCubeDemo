@@ -69,7 +69,22 @@ namespace Terrain
             yield return NoiseBlockmap(blockmap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
 
             //生成生物群落数据
-            var biomeSelector = new BiomeSelector(null);
+            var structureFactory = new StructureFactory();
+            var environmentDegree2BiomeName = new Dictionary<EnvironmentDegree, string>()
+            {
+                { EnvironmentDegree.LowTemperatureLowHumidity,"SnowyTundra"},
+                { EnvironmentDegree.LowTemperatureMediumHumidity,"SnowyTundra"},
+                { EnvironmentDegree.LowTemperatureHighHumidity,"SnowyTundra"},
+
+                { EnvironmentDegree.MediumTemperatureLowHumidity,"GrassLand"},
+                { EnvironmentDegree.MediumTemperatureMediumHumidity,"GrassLand"},
+                { EnvironmentDegree.MediumTemperatureHighHumidity,"GrassLand"},
+
+                { EnvironmentDegree.HighTemperatureLowHumidity,"Desert"},
+                { EnvironmentDegree.HighTemperatureMediumHumidity,"Desert"},
+                { EnvironmentDegree.HighTemperatureHighHumidity,"Desert"},
+            };
+            var biomeSelector = new BiomeSelector(environmentDegree2BiomeName, structureFactory);
 
             currentOperation = "正在填充水和岩浆";
             progress = 70;
@@ -496,7 +511,7 @@ namespace Terrain
             BossTerritory bossTerritory = null;
             foreach (var t in id2Territory)
             {
-                if (t is AdventurerTerritory)
+                if (t is AdventurerCampTerritory)
                 {
                     markedTerritories.Add(t);
                 }
@@ -571,11 +586,11 @@ namespace Terrain
             var assembly = Assembly.GetExecutingAssembly();
             foreach (var type in assembly.GetTypes())
             {
-                if (type.IsSubclassOf(typeof(SpecialTerritory)))
+                if (type.IsSubclassOf(typeof(SpecialTerritory)) && !type.IsAbstract)
                 {
                     specialTerritoryTypes.Add(type);
                 }
-                else if (type.IsSubclassOf(typeof(NormalTerritory)))
+                else if (type.IsSubclassOf(typeof(NormalTerritory)) && !type.IsAbstract)
                 {
                     normalTerritoryTypes.Add(type);
                 }
