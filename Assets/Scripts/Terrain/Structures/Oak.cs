@@ -1,4 +1,5 @@
 ﻿using Core;
+using System;
 using System.Collections.Generic;
 
 namespace Terrain
@@ -7,17 +8,24 @@ namespace Terrain
     {
         internal override StructureData GetStructureData(byte[,,] blockmap, Coord3Int pivot, int seed)
         {
-            var wood = (byte)BlockType.Wood;
-            var coord2Block = new byte[8, 16, 8];
-
-            //生成树跟
+            var oakData = GenerateOakData(pivot, seed);
             var localPivot = new Coord3Int(4, 0, 4);
-            SetCoord2Block(coord2Block, localPivot, wood);
+            var startPoint = pivot - localPivot;
+            return new StructureData(oakData, startPoint);
+        }
+
+        private byte[,,] GenerateOakData(Coord3Int pivot, int seed)
+        {
+            var wood = (byte)BlockType.Wood;
+            var data = new byte[8, 16, 8];
+            //生成树跟
+            var localPivot = new Coord3Int(data.GetLength(0) / 2, 0, data.GetLength(2) / 2);
+            SetCoord2Block(data, localPivot, wood);
             for (int i = 0; i < 4; i++)
             {
                 var dir = GetRandomHorizontalDirection(pivot.x, pivot.y, pivot.z, seed + i + 51);
                 var c1 = localPivot + dir;
-                SetCoord2Block(coord2Block, c1, wood);
+                SetCoord2Block(data, c1, wood);
             }
             //主干延申
             //2~6
@@ -26,20 +34,17 @@ namespace Terrain
             trunkLength = trunkLength % 5 + 2;
             for (int u = 0; u < trunkLength; u++)
             {
-                coord2Block[localPivot.x, u + 1, localPivot.z] = wood;
+                data[localPivot.x, u + 1, localPivot.z] = wood;
             }
             var rootTop = new Coord3Int(localPivot.x, trunkLength, localPivot.z);
-
             //生成树冠
             //0~2
             var canopyLength = RNG.Random3(rootTop.x + pivot.x, rootTop.y + pivot.y, rootTop.z + pivot.z, seed - 534) % 2 + 1;
             for (int u = 0; u < canopyLength; u++)
             {
-                coord2Block[rootTop.x, rootTop.y + u + 1, rootTop.z] = wood;
+                data[rootTop.x, rootTop.y + u + 1, rootTop.z] = wood;
             }
-            SetLeaves(coord2Block, rootTop.x, rootTop.y + canopyLength, rootTop.z);
-
-
+            SetLeaves(data, rootTop.x, rootTop.y + canopyLength, rootTop.z);
             //生成树枝与树叶
             //从树冠最上方开始选择
             var list = new List<Coord3Int>();
@@ -90,13 +95,13 @@ namespace Terrain
                 }
                 else
                 {
-                    SetLeaves(coord2Block, c.x, c.y, c.z);
-                    coord2Block[c.x, c.y, c.z] = wood;
+                    SetLeaves(data, c.x, c.y, c.z);
+                    data[c.x, c.y, c.z] = wood;
                     list.Add(temp);
                     list.Add(c);
                 }
             }
-            return new StructureData(coord2Block, pivot - localPivot);
+            return data;
         }
 
         private void SetLeaves(byte[,,] coord2Block, int x, int y, int z)

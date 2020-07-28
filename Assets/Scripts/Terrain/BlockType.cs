@@ -25,6 +25,6 @@
         OrangeFiber = 18,
         BrownFiber = 19,
         Iron = 20,
-
+        Carbon = 21,
     }
 }

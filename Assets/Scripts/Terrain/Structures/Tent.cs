@@ -13,7 +13,7 @@ namespace Terrain
 
         internal override StructureData GetStructureData(byte[,,] blockmap, Coord3Int pivot, int seed)
         {
-            var tent = new byte[blackTent.GetLength(0), blackTent.GetLength(1), blackTent.GetLength(2)];
+            var tent = new byte[blackTent.GetLength(0) + 2, blackTent.GetLength(1), blackTent.GetLength(2) + 2];
             var fiberBlocks = new BlockType[]
             {
                 BlockType.BlackFiber,
@@ -33,15 +33,15 @@ namespace Terrain
                 {
                     for (int z = 0; z < blackTent.GetLength(2); z++)
                     {
-                        tent[x, y, z] = blackTent[x, y, z];
-                        if (tent[x, y, z] == (byte)BlockType.BlackFiber)
+                        tent[x + 1, y, z + 1] = blackTent[x, y, z];
+                        if (tent[x + 1, y, z + 1] == (byte)BlockType.BlackFiber)
                         {
-                            tent[x, y, z] = (byte)fiberBlocks[index];
+                            tent[x + 1, y, z + 1] = (byte)fiberBlocks[index];
                         }
                     }
                 }
             }
-            var localPivot = new Coord3Int(blackTent.GetLength(0) / 2, blackTent.GetLength(1) / 2, blackTent.GetLength(2) / 2);
+            var localPivot = new Coord3Int(tent.GetLength(0) / 2, 0, tent.GetLength(2) / 2);
             return new StructureData(tent, pivot - localPivot);
         }
     }

@@ -49,9 +49,10 @@ namespace Terrain
                             var coord = new Coord3Int(x, y, z);
                             var oak = structureFactory.GetStructure<Oak>();
                             StructureData data = oak.GetStructureData(blockmap, coord, seed);
-                            if (data.StartPoint.x < 0 || data.StartPoint.x + data.Coord2Block.GetLength(0) > blockmap.GetLength(0) ||
-                                data.StartPoint.y < 0 || data.StartPoint.y + data.Coord2Block.GetLength(1) > blockmap.GetLength(1) ||
-                                data.StartPoint.z < 0 || data.StartPoint.z + data.Coord2Block.GetLength(2) > blockmap.GetLength(2))
+                            var startPoint = coord - data.LocalPivot;
+                            if (startPoint.x < 0 || startPoint.x + data.Coord2Block.GetLength(0) > blockmap.GetLength(0) ||
+                                startPoint.y < 0 || startPoint.y + data.Coord2Block.GetLength(1) > blockmap.GetLength(1) ||
+                                startPoint.z < 0 || startPoint.z + data.Coord2Block.GetLength(2) > blockmap.GetLength(2))
                             {
                                 continue;
                             }
@@ -63,9 +64,9 @@ namespace Terrain
                                     {
                                         for (int lz = 0; lz < data.Coord2Block.GetLength(2); lz++)
                                         {
-                                            var wx = data.StartPoint.x + lx;
-                                            var wy = data.StartPoint.y + ly;
-                                            var wz = data.StartPoint.z + lz;
+                                            var wx = startPoint.x + lx;
+                                            var wy = startPoint.y + ly;
+                                            var wz = startPoint.z + lz;
                                             if (data.Coord2Block[lx, ly, lz] != (byte)BlockType.Air && blockmap[wx, wy, wz] == (byte)BlockType.Air)
                                             {
                                                 blockmap[wx, wy, wz] = data.Coord2Block[lx, ly, lz];

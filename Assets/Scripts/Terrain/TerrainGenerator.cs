@@ -24,14 +24,12 @@ namespace Terrain
             yield return null;
             var length = worldLength * Constants.ChunkLength;
             var height = Constants.WorldHeight * Constants.ChunkLength;
-
             //高度图
             var heightmap = new int[length, length];
             //温度图
             var temperaturemap = new int[length, length];
             //湿度图
             var humiditymap = new int[length, length];
-
             yield return FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
 
             currentOperation = "正在生成领地图";
@@ -51,7 +49,7 @@ namespace Terrain
             Debug.Log($"Try to fill the territory {times} times");
 
             currentOperation = "正在生成路径图";
-            progress = 20;
+            progress = 15;
             yield return null;
             //路径信息
             var paths = new List<Path>();
@@ -61,7 +59,7 @@ namespace Terrain
 
 
             currentOperation = "正在生成噪声图";
-            progress = 50;
+            progress = 40;
             yield return null;
             //生成3D噪声图和凹洞的字典数据
             var blockmap = new byte[length, height, length];
@@ -86,21 +84,30 @@ namespace Terrain
             };
             var biomeSelector = new BiomeSelector(environmentDegree2BiomeName, structureFactory);
 
+
             currentOperation = "正在填充水和岩浆";
-            progress = 70;
+            progress = 45;
             yield return null;
             yield return FillPits(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
 
             currentOperation = "正在创建地表";
-            progress = 80;
+            progress = 55;
             yield return null;
             yield return CreateSurfaceLayer(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
 
+
+
             currentOperation = "正在进行种植";
-            progress = 90;
+            progress = 60;
             yield return null;
             yield return CreatePlants(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
-            result = new Layer(blockmap);
+
+
+            currentOperation = "正在构建领地";
+            progress = 70;
+            yield return GenerateStructuresInTerritories(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, id2Territory, structureFactory, seed);
+
+
             #region 生成图片查看结果
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
 
@@ -149,9 +156,18 @@ namespace Terrain
             byte[] bytes = texture.EncodeToPNG();
             System.IO.File.WriteAllBytes($"{Application.dataPath}/aa.png", bytes);
             #endregion
+            result = new Layer(blockmap);
             progress = 100;
-
             isDone = true;
+        }
+
+        private IEnumerator GenerateStructuresInTerritories(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, List<Territory> id2Territory, StructureFactory structureFactory, int seed)
+        {
+            foreach (var territory in id2Territory)
+            {
+                territory.GenerateStructures(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, structureFactory, seed);
+                yield return null;
+            }
         }
 
         private IEnumerator CreatePlants(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)

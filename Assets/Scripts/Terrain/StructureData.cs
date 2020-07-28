@@ -4,13 +4,16 @@ namespace Terrain
 {
     internal class StructureData
     {
-        public StructureData(byte[,,] coord2Block, Coord3Int startPoint)
+        private byte[,,] coord2Block;
+        private Coord3Int localPivot;
+
+        public StructureData(byte[,,] coord2Block, Coord3Int localPivot)
         {
-            Coord2Block = coord2Block;
-            StartPoint = startPoint;
+            this.coord2Block = coord2Block;
+            this.localPivot = localPivot;
         }
 
         public byte[,,] Coord2Block { get; }
-        public Coord3Int StartPoint { get; }
+        public Coord3Int LocalPivot { get; }
     }
 }
