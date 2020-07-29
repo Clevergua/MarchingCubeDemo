@@ -7,33 +7,24 @@ namespace Terrain
 {
     internal class BiomeSelector
     {
-        private IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome;
+        private Dictionary<EnvironmentDegree, Biome> environmentDegree2Biome;
         public BiomeSelector(IReadOnlyDictionary<EnvironmentDegree, string> environmentDegree2BiomeName, StructureFactory structureFactory)
         {
-            var environmentDegree2Biome = new Dictionary<EnvironmentDegree, Biome>();
+            environmentDegree2Biome = new Dictionary<EnvironmentDegree, Biome>();
             var assembly = Assembly.GetExecutingAssembly();
             var typeName2Instance = new Dictionary<string, Biome>();
-            foreach (var pair in environmentDegree2BiomeName)
+            foreach (var type in assembly.GetTypes())
             {
-                if (typeName2Instance.ContainsKey())
+                if (type.IsSubclassOf(typeof(Biome)) && !type.IsAbstract)
                 {
-
-                }
-                foreach (var type in assembly.GetTypes())
-                {
-                    if (type.IsSubclassOf(typeof(Biome)) && !type.IsAbstract)
-                    {
-
-                        if (type.Name == pair.Value)
-                        {
-                            var instance = Activator.CreateInstance(type, structureFactory) as Biome;
-                            environmentDegree2Biome.Add(pair.Key, instance);
-                            break;
-                        }
-                    }
+                    var instance = Activator.CreateInstance(type, structureFactory) as Biome;
+                    typeName2Instance.Add(type.Name, instance);
                 }
             }
-            this.environmentDegree2Biome = environmentDegree2Biome;
+            foreach (var pair in environmentDegree2BiomeName)
+            {
+                environmentDegree2Biome.Add(pair.Key, typeName2Instance[pair.Value]);
+            }
         }
         internal Biome Select(int altitudeTemperature, int humidity)
         {

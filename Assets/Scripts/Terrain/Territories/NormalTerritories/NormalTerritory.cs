@@ -1,9 +1,7 @@
-﻿using UnityEngine;
-using UnityEditor;
-namespace Terrain
+﻿namespace Terrain
 {
     internal abstract class NormalTerritory : Territory
     {
-
     }
 }
+

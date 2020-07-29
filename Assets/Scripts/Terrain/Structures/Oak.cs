@@ -6,14 +6,14 @@ namespace Terrain
 {
     internal class Oak : Structure
     {
-        internal StructureData GetRandomOak(byte[,,] blockmap, Coord3Int pivot, int seed)
+        internal StructureData GetRandomOak(Coord3Int randomFactor, int seed)
         {
-            var oakData = GenerateOakData(pivot, seed);
+            var oakData = GenerateOakData(randomFactor, seed);
             var localPivot = new Coord3Int(4, 0, 4);
             return new StructureData(oakData, localPivot);
         }
 
-        private byte[,,] GenerateOakData(Coord3Int pivot, int seed)
+        private byte[,,] GenerateOakData(Coord3Int randomFactor, int seed)
         {
             var wood = (byte)BlockType.Wood;
             var data = new byte[8, 16, 8];
@@ -22,13 +22,13 @@ namespace Terrain
             SetCoord2Block(data, localPivot, wood);
             for (int i = 0; i < 4; i++)
             {
-                var dir = GetRandomHorizontalDirection(pivot.x, pivot.y, pivot.z, seed + i + 51);
+                var dir = GetRandomHorizontalDirection(randomFactor.x, randomFactor.y, randomFactor.z, seed + i + 51);
                 var c1 = localPivot + dir;
                 SetCoord2Block(data, c1, wood);
             }
             //主干延申
             //2~6
-            var trunkLength = RNG.Random3(pivot.x, pivot.y, pivot.z, seed - 85);
+            var trunkLength = RNG.Random3(randomFactor.x, randomFactor.y, randomFactor.z, seed - 85);
             trunkLength = trunkLength > 0 ? trunkLength : -trunkLength;
             trunkLength = trunkLength % 5 + 2;
             for (int u = 0; u < trunkLength; u++)
@@ -38,7 +38,7 @@ namespace Terrain
             var rootTop = new Coord3Int(localPivot.x, trunkLength, localPivot.z);
             //生成树冠
             //0~2
-            var canopyLength = RNG.Random3(rootTop.x + pivot.x, rootTop.y + pivot.y, rootTop.z + pivot.z, seed - 534) % 2 + 1;
+            var canopyLength = RNG.Random3(rootTop.x + randomFactor.x, rootTop.y + randomFactor.y, rootTop.z + randomFactor.z, seed - 534) % 2 + 1;
             for (int u = 0; u < canopyLength; u++)
             {
                 data[rootTop.x, rootTop.y + u + 1, rootTop.z] = wood;
@@ -54,7 +54,7 @@ namespace Terrain
             }
             for (int t = 0; t < 24; t++)
             {
-                var index = RNG.Random3(pivot.x, trunkLength + pivot.y, pivot.z, seed + t + 7);
+                var index = RNG.Random3(randomFactor.x, trunkLength + randomFactor.y, randomFactor.z, seed + t + 7);
                 index = index > 0 ? index : -index;
                 index = index % list.Count;
 
