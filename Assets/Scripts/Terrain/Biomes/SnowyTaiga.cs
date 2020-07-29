@@ -3,9 +3,9 @@ using Core;
 
 namespace Terrain
 {
-    internal class SnowyLand : Biome
+    internal class SnowyTaiga : Biome
     {
-        public SnowyLand(StructureFactory structureFactory) : base(structureFactory) { }
+        public SnowyTaiga(StructureFactory structureFactory) : base(structureFactory) { }
 
         internal override void Growing(byte[,,] blockmap, int x, int z, int seed)
         {

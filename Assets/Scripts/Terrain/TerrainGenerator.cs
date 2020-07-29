@@ -11,10 +11,8 @@ namespace Terrain
     {
         public int progress { get; private set; }
         public Layer result { get; private set; }
-
         public string currentOperation { get; private set; }
         public bool isDone { get; private set; } = false;
-
 
         private int previousRandomNum;
         public IEnumerator GenerateLayer(int seed, int worldLength)
@@ -57,7 +55,6 @@ namespace Terrain
             var coord2MinDistanceFromPath = new Dictionary<Coord3Int, int>();
             yield return GenerateCoord2MinDistanceFromPath(coord2MinDistanceFromPath, paths, length, height, heightmap);
 
-
             currentOperation = "正在生成噪声图";
             progress = 40;
             yield return null;
@@ -70,9 +67,9 @@ namespace Terrain
             var structureFactory = new StructureFactory();
             var environmentDegree2BiomeName = new Dictionary<EnvironmentDegree, string>()
             {
-                { EnvironmentDegree.LowTemperatureLowHumidity,"SnowyTundra"},
-                { EnvironmentDegree.LowTemperatureMediumHumidity,"SnowyTundra"},
-                { EnvironmentDegree.LowTemperatureHighHumidity,"SnowyTundra"},
+                { EnvironmentDegree.LowTemperatureLowHumidity,"SnowyTaiga"},
+                { EnvironmentDegree.LowTemperatureMediumHumidity,"SnowyTaiga"},
+                { EnvironmentDegree.LowTemperatureHighHumidity,"SnowyTaiga"},
 
                 { EnvironmentDegree.MediumTemperatureLowHumidity,"GrassLand"},
                 { EnvironmentDegree.MediumTemperatureMediumHumidity,"GrassLand"},
@@ -84,7 +81,6 @@ namespace Terrain
             };
             var biomeSelector = new BiomeSelector(environmentDegree2BiomeName, structureFactory);
 
-
             currentOperation = "正在填充水和岩浆";
             progress = 45;
             yield return null;
@@ -95,18 +91,14 @@ namespace Terrain
             yield return null;
             yield return CreateSurfaceLayer(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
 
-
-
             currentOperation = "正在进行种植";
             progress = 60;
             yield return null;
             yield return CreatePlants(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
 
-
             currentOperation = "正在构建领地";
             progress = 70;
             yield return GenerateStructuresInTerritories(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, id2Territory, structureFactory, seed);
-
 
             #region 生成图片查看结果
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);

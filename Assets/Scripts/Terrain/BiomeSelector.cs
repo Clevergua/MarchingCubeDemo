@@ -12,12 +12,18 @@ namespace Terrain
         {
             var environmentDegree2Biome = new Dictionary<EnvironmentDegree, Biome>();
             var assembly = Assembly.GetExecutingAssembly();
-            foreach (var type in assembly.GetTypes())
+            var typeName2Instance = new Dictionary<string, Biome>();
+            foreach (var pair in environmentDegree2BiomeName)
             {
-                if (type.IsSubclassOf(typeof(Biome)) && !type.IsAbstract)
+                if (typeName2Instance.ContainsKey())
                 {
-                    foreach (var pair in environmentDegree2BiomeName)
+
+                }
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (type.IsSubclassOf(typeof(Biome)) && !type.IsAbstract)
                     {
+
                         if (type.Name == pair.Value)
                         {
                             var instance = Activator.CreateInstance(type, structureFactory) as Biome;

@@ -11,9 +11,9 @@ namespace Terrain
             blackTent = data;
         }
 
-        internal override StructureData GetStructureData(byte[,,] blockmap, Coord3Int pivot, int seed)
+        internal StructureData GetRandomColorTent(Coord3Int ranFactor, int seed)
         {
-            var tent = new byte[blackTent.GetLength(0) + 2, blackTent.GetLength(1), blackTent.GetLength(2) + 2];
+            var tent = new byte[blackTent.GetLength(0), blackTent.GetLength(1), blackTent.GetLength(2)];
             var fiberBlocks = new BlockType[]
             {
                 BlockType.BlackFiber,
@@ -25,7 +25,7 @@ namespace Terrain
                 BlockType.RedFiber,
                 BlockType.YellowFiber,
             };
-            var index = RNG.Random3(pivot.x, pivot.y, pivot.z, seed + 2134) % fiberBlocks.Length;
+            var index = RNG.Random3(ranFactor.x, ranFactor.y, ranFactor.z, seed + 2134) % fiberBlocks.Length;
             index = index > 0 ? index : -index;
             for (int x = 0; x < blackTent.GetLength(0); x++)
             {
@@ -33,16 +33,16 @@ namespace Terrain
                 {
                     for (int z = 0; z < blackTent.GetLength(2); z++)
                     {
-                        tent[x + 1, y, z + 1] = blackTent[x, y, z];
-                        if (tent[x + 1, y, z + 1] == (byte)BlockType.BlackFiber)
+                        tent[x, y, z] = blackTent[x, y, z];
+                        if (tent[x, y, z] == (byte)BlockType.BlackFiber)
                         {
-                            tent[x + 1, y, z + 1] = (byte)fiberBlocks[index];
+                            tent[x, y, z] = (byte)fiberBlocks[index];
                         }
                     }
                 }
             }
             var localPivot = new Coord3Int(tent.GetLength(0) / 2, 0, tent.GetLength(2) / 2);
-            return new StructureData(tent, pivot - localPivot);
+            return new StructureData(tent, localPivot);
         }
     }
 }

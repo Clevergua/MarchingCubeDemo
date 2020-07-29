@@ -12,7 +12,7 @@ namespace Terrain
         private Dictionary<Type, Structure> type2Structure = new Dictionary<Type, Structure>();
         public StructureFactory()
         {
-            var folderPath = System.IO.Path.Combine(Application.streamingAssetsPath, "Structures");
+            var folderPath = System.IO.Path.Combine(Application.streamingAssetsPath, "StructureData");
             var assembly = Assembly.GetExecutingAssembly();
             foreach (var type in assembly.GetTypes())
             {

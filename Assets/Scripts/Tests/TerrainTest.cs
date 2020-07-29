@@ -215,5 +215,76 @@ namespace Tests
                 Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount * 256) * 100}%");
             }
         }
+
+        [UnityTest]
+        public IEnumerator 测试三维噪声概率()
+        {
+            var sampleCount = 1000;
+            var density = 0.007f;
+            var range2Count = new int[10];
+            var min = 0f;
+            var max = 0f;
+            var seed = 0;
+            for (int x = 0; x < sampleCount; x++)
+            {
+                for (int y = 0; y < 256; y++)
+                {
+                    for (int z = 0; z < sampleCount; z++)
+                    {
+                        var value = PerlinNoise.PerlinNoise3D(seed, x * density, y * density, z * density) ;
+                        //var t = (value * value);
+                        //value *= 1.4f - 0.4f * t;
+                        if (value < -0.8f)
+                        {
+                            range2Count[0] += 1;
+                        }
+                        else if (value < -0.6f)
+                        {
+                            range2Count[1] += 1;
+                        }
+                        else if (value < -0.4f)
+                        {
+                            range2Count[2] += 1;
+                        }
+                        else if (value < -0.2f)
+                        {
+                            range2Count[3] += 1;
+                        }
+                        else if (value < 0f)
+                        {
+                            range2Count[4] += 1;
+                        }
+                        else if (value < 0.2f)
+                        {
+                            range2Count[5] += 1;
+                        }
+                        else if (value < 0.4f)
+                        {
+                            range2Count[6] += 1;
+                        }
+                        else if (value < 0.6f)
+                        {
+                            range2Count[7] += 1;
+                        }
+                        else if (value < 0.8f)
+                        {
+                            range2Count[8] += 1;
+                        }
+                        else
+                        {
+                            range2Count[9] += 1;
+                        }
+                        min = value < min ? value : min;
+                        max = value > max ? value : max;
+                    }
+                }
+                yield return null;
+            }
+            for (int i = 0; i < range2Count.Length; i++)
+            {
+                Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount) * 100}%");
+            }
+            Debug.Log($"Min:{min}, Max:{max}");
+        }
     }
 }

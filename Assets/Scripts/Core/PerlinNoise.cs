@@ -8,6 +8,7 @@ namespace Core
             new Coord2Int(-1,-1), new Coord2Int( 1,-1), new Coord2Int(-1, 1), new Coord2Int( 1, 1),
             new Coord2Int( 0,-1), new Coord2Int(-1, 0), new Coord2Int( 0, 1), new Coord2Int( 1, 0),
         };
+
         private static readonly Coord3Int[] GRAD_3D =
         {
             new Coord3Int( 1, 1, 0), new Coord3Int(-1, 1, 0), new Coord3Int( 1,-1, 0), new Coord3Int(-1,-1, 0),
@@ -16,12 +17,12 @@ namespace Core
             new Coord3Int( 1, 1, 0), new Coord3Int( 0,-1, 1), new Coord3Int(-1, 1, 0), new Coord3Int( 0,-1,-1),
         };
 
-
         private static float SmoothLerp(float a, float b, float t)
         {
             t = t * t * t * (6 * t * t - 15 * t + 10);
             return a + (b - a) * t;
         }
+
         private static Coord2Int GetGradient2D(int x, int y, int seed)
         {
             int hash = RNG.Random2(x, y, seed);
@@ -30,6 +31,7 @@ namespace Core
             if (index < 0) index += 8;
             return GRAD_2D[index];
         }
+
         private static Coord3Int GetGradient3D(int x, int y, int z, int seed)
         {
             int hash = RNG.Random3(x, y, z, seed);
@@ -55,6 +57,7 @@ namespace Core
             Coord3Int gradient = GetGradient3D(ix, iy, iz, seed);
             return dx * gradient.x + dy * gradient.y + dz * gradient.z;
         }
+
         /// <summary>
         /// 范围约为-0.633~0.633
         /// 返回时候可以根据需求通过*1.578955678714098将值定在-1~1,此时占比约算:
