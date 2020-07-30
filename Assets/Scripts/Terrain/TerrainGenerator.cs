@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 
 namespace Terrain
@@ -46,25 +47,10 @@ namespace Terrain
             var times = territorySeed - seed + 1;
             Debug.Log($"Try to fill the territory {times} times");
 
-            currentOperation = "正在生成路径图";
-            progress = 15;
-            yield return null;
-            //路径信息
-            var paths = new List<Path>();
-            yield return GeneratePaths(paths, id2Territory, territorymap);
-            var coord2MinDistanceFromPath = new Dictionary<Coord3Int, int>();
-            yield return GenerateCoord2MinDistanceFromPath(coord2MinDistanceFromPath, paths, length, height, heightmap);
-
-            currentOperation = "正在生成噪声图";
-            progress = 40;
-            yield return null;
-            //生成3D噪声图和凹洞的字典数据
-            var blockmap = new byte[length, height, length];
-            //处理后的数据:0:空 1:实体 2:凹洞
-            yield return NoiseBlockmap(blockmap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
+            //生成建筑工厂
+            var structureFactory = new StructureFactory();
 
             //生成生物群落数据
-            var structureFactory = new StructureFactory();
             var environmentDegree2BiomeName = new Dictionary<EnvironmentDegree, string>()
             {
                 { EnvironmentDegree.LowTemperatureLowHumidity,"SnowyTaiga"},
@@ -81,83 +67,111 @@ namespace Terrain
             };
             var biomeSelector = new BiomeSelector(environmentDegree2BiomeName, structureFactory);
 
-            currentOperation = "正在填充水和岩浆";
-            progress = 45;
-            yield return null;
-            yield return FillPits(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
-
-            currentOperation = "正在创建地表";
-            progress = 55;
-            yield return null;
-            yield return CreateSurfaceLayer(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
-
-            currentOperation = "正在进行种植";
-            progress = 60;
-            yield return null;
-            yield return CreatePlants(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
-
-            currentOperation = "正在构建领地";
-            progress = 70;
-            yield return GenerateStructuresInTerritories(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, id2Territory, structureFactory, seed);
-
-            #region 生成图片查看结果
-            var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
-
-            var territoryType2Color = new Dictionary<Type, Color>();
-            foreach (var item in id2Territory)
+            //布置领地建筑
+            foreach (var territory in id2Territory)
             {
-                var t = item.GetType();
-                if (!territoryType2Color.ContainsKey(t))
-                {
-                    var c = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
-                    territoryType2Color.Add(t, c);
-                }
-            }
-            // set the pixel values
-            for (int x = 0; x < length; x++)
-            {
-                for (int y = 0; y < length; y++)
-                {
+                yield return ArrangeStructuresInTerritory(territory, seed, structureFactory);
 
-                    var index = territorymap[x, y];
-                    if (index == -1)
-                    {
-                        //if (pathmap[x, y] != -1)
-                        //{
-                        //    texture.SetPixel(x, y, Color.green);
-                        //}
-                        //else
-                        //{
-                        var c = new Color((float)temperaturemap[x, y] / 100, 0, 0);
-                        texture.SetPixel(x, y, c);
-                        //}
-                    }
-                    else
-                    {
-                        texture.SetPixel(x, y, territoryType2Color[id2Territory[index].GetType()]);
-                    }
+            }
 
-                }
-            }
-            foreach (var item in coord2MinDistanceFromPath)
-            {
-                texture.SetPixel(item.Key.x, item.Key.z, Color.green);
-            }
-            // Apply all SetPixel calls
-            texture.Apply();
-            byte[] bytes = texture.EncodeToPNG();
-            System.IO.File.WriteAllBytes($"{Application.dataPath}/aa.png", bytes);
-            #endregion
-            result = new Layer(blockmap);
+            currentOperation = "正在生成路径图";
+            progress = 15;
+            yield return null;
+            //路径信息
+            var paths = new List<Path>();
+            yield return GeneratePaths(paths, id2Territory, territorymap);
+            //var coord2MinDistanceFromPath = new Dictionary<Coord3Int, int>();
+            //yield return GenerateCoord2MinDistanceFromPath(coord2MinDistanceFromPath, paths, length, height, heightmap);
+
+            //currentOperation = "正在生成噪声图";
+            //progress = 40;
+            //yield return null;
+            ////生成3D噪声图和凹洞的字典数据
+            //var blockmap = new byte[length, height, length];
+            ////处理后的数据:0:空 1:实体 2:凹洞
+            //yield return NoiseBlockmap(blockmap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
+
+            //currentOperation = "正在填充水和岩浆";
+            //progress = 45;
+            //yield return null;
+            //yield return FillPits(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
+
+            //currentOperation = "正在创建地表";
+            //progress = 55;
+            //yield return null;
+            //yield return CreateSurfaceLayer(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, seed);
+
+            //currentOperation = "正在进行种植";
+            //progress = 60;
+            //yield return null;
+            //yield return CreatePlants(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
+
+            //currentOperation = "正在构建领地";
+            //progress = 70;
+            //yield return GenerateStructuresInTerritories(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, id2Territory, structureFactory, seed);
+
+            //var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
+            //var territoryType2Color = new Dictionary<Type, Color>();
+            //foreach (var item in id2Territory)
+            //{
+            //    var t = item.GetType();
+            //    if (!territoryType2Color.ContainsKey(t))
+            //    {
+            //        var c = new Color(UnityEngine.Random.value, UnityEngine.Random.value, UnityEngine.Random.value);
+            //        territoryType2Color.Add(t, c);
+            //    }
+            //}
+            //// set the pixel values
+            //for (int x = 0; x < length; x++)
+            //{
+            //    for (int y = 0; y < length; y++)
+            //    {
+
+            //        var index = territorymap[x, y];
+            //        if (index == -1)
+            //        {
+            //            //if (pathmap[x, y] != -1)
+            //            //{
+            //            //    texture.SetPixel(x, y, Color.green);
+            //            //}
+            //            //else
+            //            //{
+            //            var c = new Color((float)temperaturemap[x, y] / 100, 0, 0);
+            //            texture.SetPixel(x, y, c);
+            //            //}
+            //        }
+            //        else
+            //        {
+            //            texture.SetPixel(x, y, territoryType2Color[id2Territory[index].GetType()]);
+            //        }
+
+            //    }
+            //}
+            //foreach (var item in coord2MinDistanceFromPath)
+            //{
+            //    texture.SetPixel(item.Key.x, item.Key.z, Color.green);
+            //}
+            //// Apply all SetPixel calls
+            //texture.Apply();
+            //byte[] bytes = texture.EncodeToPNG();
+            //System.IO.File.WriteAllBytes($"{Application.dataPath}/aa.png", bytes);
+
+            //result = new Layer(blockmap);
             progress = 100;
             isDone = true;
+        }
+
+        private IEnumerator ArrangeStructuresInTerritory(Territory territory, int seed, StructureFactory structureFactory)
+        {
+            territory.ArrangeStructures(seed, structureFactory);
+            yield return null;
         }
 
         private IEnumerator GenerateStructuresInTerritories(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, List<Territory> id2Territory, StructureFactory structureFactory, int seed)
         {
             foreach (var territory in id2Territory)
             {
-                territory.GenerateStructures(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, structureFactory, seed);
+                territory.ArrangeStructures(blockmap, biomeSelector, temperaturemap, humiditymap, heightmap, structureFactory, seed);
                 yield return null;
             }
         }
@@ -604,7 +618,7 @@ namespace Terrain
                 }
             }
 
-            //产生领地特殊集合
+            //产生特殊领地集合
             var specialTerritories = new List<SpecialTerritory>();
             foreach (var type in specialTerritoryTypes)
             {
@@ -630,9 +644,9 @@ namespace Terrain
                 }
                 Debug.Log(numOfAttempts);
             }
-            //产生领地集合
+            //产生普通领地集合
             var normalTerritories = new List<NormalTerritory>();
-            var count = Mathf.Abs(RNG.Random1(8731, seed) % Constants.MaxNormalTerritoryCount - Constants.MinNormalTerritoryCount) + Constants.MinNormalTerritoryCount;
+            var count = Mathf.Abs(RNG.Random1(8731, seed) % (Constants.MaxNormalTerritoryCount - Constants.MinNormalTerritoryCount)) + Constants.MinNormalTerritoryCount;
             for (int i = 0; i < count; i++)
             {
                 var index = Mathf.Abs(GetNextRandomInt(seed) % normalTerritoryTypes.Count);
@@ -671,29 +685,23 @@ namespace Terrain
             var success = true;
 
             var length = territorymap.GetLength(0);
-            var range = territory.Range;
-            var rangeCount = (length - 2 * range);
-            var vx = GetNextRandomInt(seed);
-            var vy = GetNextRandomInt(seed);
-            var cx = Math.Abs(vx % rangeCount) + range;
-            var cy = Math.Abs(vy % rangeCount) + range;
-            for (int x = cx - range; x < cx + range; x++)
+            var territoryLength = territory.Range;
+            var rangeCount = (length - 2 * territoryLength);
+            var rx = GetNextRandomInt(seed);
+            var ry = GetNextRandomInt(seed);
+            var cx = Math.Abs(rx % rangeCount) + territoryLength;
+            var cy = Math.Abs(ry % rangeCount) + territoryLength;
+            for (int x = cx - territoryLength; x < cx + territoryLength; x++)
             {
-                for (int y = cy - range; y < cy + range; y++)
+                for (int y = cy - territoryLength; y < cy + territoryLength; y++)
                 {
-                    var dx = x - cx;
-                    var dy = y - cy;
-                    //If within range
-                    if (range * range <= dx * dx + dy * dy)
+                    if (territorymap[x, y] == -1)
                     {
-                        if (territorymap[x, y] == -1)
-                        {
-                            //Do nothing
-                        }
-                        else
-                        {
-                            success = false;
-                        }
+                        //Do nothing
+                    }
+                    else
+                    {
+                        success = false;
                     }
                 }
             }
@@ -704,17 +712,11 @@ namespace Terrain
                 id2Territory.Add(territory);
                 territory.CenterCoord = new Coord2Int(cx, cy);
 
-                for (int x = cx - range; x < cx + range; x++)
+                for (int x = cx - territoryLength; x < cx + territoryLength; x++)
                 {
-                    for (int y = cy - range; y < cy + range; y++)
+                    for (int y = cy - territoryLength; y < cy + territoryLength; y++)
                     {
-                        var dx = x - cx;
-                        var dy = y - cy;
-                        //If within range
-                        if (dx * dx + dy * dy <= range * range)
-                        {
-                            territorymap[x, y] = index;
-                        }
+                        territorymap[x, y] = index;
                     }
                 }
             }

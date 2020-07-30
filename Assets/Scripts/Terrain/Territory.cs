@@ -1,5 +1,6 @@
 ﻿using Core;
 using System;
+using System.Collections.Generic;
 
 namespace Terrain
 {
@@ -7,6 +8,6 @@ namespace Terrain
     {
         public abstract int Range { get; }
         public Coord2Int CenterCoord { get; internal set; }
-        internal abstract void GenerateStructures(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, StructureFactory structureFactory, int seed);
+        internal abstract void ArrangeStructures(int seed, StructureFactory structureFactory);
     }
 }

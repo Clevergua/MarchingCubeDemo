@@ -10,7 +10,6 @@ namespace Terrain
         {
             blackTent = data;
         }
-
         internal StructureData GetRandomColorTent(Coord3Int ranFactor, int seed)
         {
             var tent = new byte[blackTent.GetLength(0), blackTent.GetLength(1), blackTent.GetLength(2)];

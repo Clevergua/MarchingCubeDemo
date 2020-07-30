@@ -48,7 +48,7 @@ namespace Terrain
                         {
                             var coord = new Coord3Int(x, y, z);
                             var oak = structureFactory.GetStructure<Oak>();
-                            StructureData data = oak.GetRandomOak(blockmap, coord, seed);
+                            StructureData data = oak.GetRandomOak(coord, seed);
                             var startPoint = coord - data.LocalPivot;
                             if (startPoint.x < 0 || startPoint.x + data.Coord2Block.GetLength(0) > blockmap.GetLength(0) ||
                                 startPoint.y < 0 || startPoint.y + data.Coord2Block.GetLength(1) > blockmap.GetLength(1) ||
