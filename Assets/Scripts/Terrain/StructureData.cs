@@ -4,16 +4,22 @@ namespace Terrain
 {
     internal class StructureData
     {
-        private byte[,,] coord2Block;
-        private Coord3Int localPivot;
+        private byte[,,] blockmap;
+        private Coord3Int bottomCenterCoord;
 
-        public StructureData(byte[,,] coord2Block, Coord3Int localPivot)
+        public StructureData(byte[,,] blockmap)
         {
-            this.coord2Block = coord2Block;
-            this.localPivot = localPivot;
+            this.blockmap = blockmap;
+            bottomCenterCoord = new Coord3Int(blockmap.GetLength(0) / 2, 0, blockmap.GetLength(2) / 2);
         }
 
-        public byte[,,] Coord2Block { get; }
-        public Coord3Int LocalPivot { get; }
+        /// <summary>
+        /// 块数据图
+        /// </summary>
+        public byte[,,] Blockmap { get => blockmap; }
+        /// <summary>
+        /// 底部中心位置
+        /// </summary>
+        public Coord3Int BottomCenterCoord { get => bottomCenterCoord; }
     }
 }

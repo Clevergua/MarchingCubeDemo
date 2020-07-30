@@ -6,11 +6,10 @@ namespace Terrain
 {
     internal class Oak : Structure
     {
-        internal StructureData GetRandomOak(Coord3Int randomFactor, int seed)
+        internal StructureData GetData(Coord3Int randomFactor, int seed)
         {
             var oakData = GenerateOakData(randomFactor, seed);
-            var localPivot = new Coord3Int(4, 0, 4);
-            return new StructureData(oakData, localPivot);
+            return new StructureData(oakData);
         }
 
         private byte[,,] GenerateOakData(Coord3Int randomFactor, int seed)

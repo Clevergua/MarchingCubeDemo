@@ -10,7 +10,7 @@ namespace Terrain
         {
             blackTent = data;
         }
-        internal StructureData GetRandomColorTent(Coord3Int ranFactor, int seed)
+        internal StructureData GetData(Coord3Int ranFactor, int seed)
         {
             var tent = new byte[blackTent.GetLength(0), blackTent.GetLength(1), blackTent.GetLength(2)];
             var fiberBlocks = new BlockType[]
@@ -40,8 +40,7 @@ namespace Terrain
                     }
                 }
             }
-            var localPivot = new Coord3Int(tent.GetLength(0) / 2, 0, tent.GetLength(2) / 2);
-            return new StructureData(tent, localPivot);
+            return new StructureData(tent);
         }
     }
 }

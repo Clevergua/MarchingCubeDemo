@@ -26,5 +26,6 @@
         BrownFiber = 19,
         Iron = 20,
         Carbon = 21,
+        Fire = 22,
     }
 }
