@@ -15,11 +15,12 @@ namespace Terrain
         public bool isDone { get; private set; } = false;
 
         private int previousRandomNum;
-        public IEnumerator GenerateLayer(int seed, int worldLength)
+        public IEnumerator GenerateIsland(int seed, int worldLength)
         {
             currentOperation = "正在生成环境图";
             progress = 5;
             yield return null;
+
             var length = worldLength * Constants.ChunkLength;
             //高度图
             var heightmap = new int[length, length];
@@ -27,7 +28,8 @@ namespace Terrain
             var temperaturemap = new int[length, length];
             //湿度图
             var humiditymap = new int[length, length];
-            yield return FillEnvironmentalmaps(seed, length, heightmap, temperaturemap, humiditymap);
+            yield return FillEnvironmentalmaps(heightmap, temperaturemap, humiditymap, seed, length);
+
 
             currentOperation = "正在生成领地图";
             progress = 10;
@@ -45,30 +47,30 @@ namespace Terrain
             var times = territorySeed - seed + 1;
             Debug.Log($"Try to fill the territory {times} times");
 
-            //生成建筑工厂
-            var structureFactory = new StructureFactory();
+            ////生成建筑工厂
+            //var structureFactory = new StructureFactory();
 
-            //生成生物群落数据
-            var environmentDegree2BiomeName = new Dictionary<EnvironmentDegree, string>()
-            {
-                { EnvironmentDegree.LowTemperatureLowHumidity,"SnowyTaiga"},
-                { EnvironmentDegree.LowTemperatureMediumHumidity,"SnowyTaiga"},
-                { EnvironmentDegree.LowTemperatureHighHumidity,"SnowyTaiga"},
+            ////生成生物群落数据
+            //var environmentDegree2BiomeName = new Dictionary<EnvironmentDegree, string>()
+            //{
+            //    { EnvironmentDegree.LowTemperatureLowHumidity,"SnowyTaiga"},
+            //    { EnvironmentDegree.LowTemperatureMediumHumidity,"SnowyTaiga"},
+            //    { EnvironmentDegree.LowTemperatureHighHumidity,"SnowyTaiga"},
 
-                { EnvironmentDegree.MediumTemperatureLowHumidity,"GrassLand"},
-                { EnvironmentDegree.MediumTemperatureMediumHumidity,"GrassLand"},
-                { EnvironmentDegree.MediumTemperatureHighHumidity,"GrassLand"},
+            //    { EnvironmentDegree.MediumTemperatureLowHumidity,"GrassLand"},
+            //    { EnvironmentDegree.MediumTemperatureMediumHumidity,"GrassLand"},
+            //    { EnvironmentDegree.MediumTemperatureHighHumidity,"GrassLand"},
 
-                { EnvironmentDegree.HighTemperatureLowHumidity,"Desert"},
-                { EnvironmentDegree.HighTemperatureMediumHumidity,"Desert"},
-                { EnvironmentDegree.HighTemperatureHighHumidity,"Desert"},
-            };
-            var biomeSelector = new BiomeSelector(environmentDegree2BiomeName, structureFactory);
+            //    { EnvironmentDegree.HighTemperatureLowHumidity,"Desert"},
+            //    { EnvironmentDegree.HighTemperatureMediumHumidity,"Desert"},
+            //    { EnvironmentDegree.HighTemperatureHighHumidity,"Desert"},
+            //};
+            //var biomeSelector = new BiomeSelector(environmentDegree2BiomeName, structureFactory);
 
-            //填充建筑数据图
-            var structuredatamap = new int[length, length];
-            var id2StructureData = new List<StructureData>();
-            yield return FillTerritoryStructuredatamap(structuredatamap, id2StructureData, id2Territory, seed, structureFactory, heightmap, temperaturemap, humiditymap, biomeSelector);
+            ////填充建筑数据图
+            //var structuredatamap = new int[length, length];
+            //var id2StructureData = new List<StructureData>();
+            //yield return FillTerritoryStructuredatamap(structuredatamap, id2StructureData, id2Territory, seed, structureFactory, heightmap, temperaturemap, humiditymap, biomeSelector);
 
             //currentOperation = "正在生成路径图";
             //progress = 15;
@@ -157,28 +159,28 @@ namespace Terrain
             isDone = true;
         }
 
-        private IEnumerator FillTerritoryStructuredatamap(int[,] structuredatamap, List<StructureData> id2StructureData, IEnumerable<Territory> id2Territory, int seed, StructureFactory structureFactory, int[,] heightmap, int[,] temperaturemap, int[,] humiditymap, BiomeSelector biomeSelector)
-        {
-            foreach (var territory in id2Territory)
-            {
-                var territoryLength = territory.Range * 2 + 1;
-                var localStructuredatamap = new int[territoryLength, territoryLength];
-                var localID2StructureData = new List<StructureData>();
-                //为了领地的自由创建传入更多的参数作为参考信息
-                yield return territory.FillLocalStructuredatamap(localStructuredatamap, localID2StructureData, seed, structureFactory, heightmap, temperaturemap, humiditymap, biomeSelector);
-                var currentCount = id2StructureData.Count;
-                for (int x = 0; x < territoryLength; x++)
-                {
-                    for (int z = 0; z < territoryLength; z++)
-                    {
-                        var wx = territory.CenterCoord.x + x - territory.Range;
-                        var wz = territory.CenterCoord.y + z - territory.Range;
-                        structuredatamap[wx, wz] = localStructuredatamap[x, z] + currentCount;
-                    }
-                }
-                id2StructureData.AddRange(localID2StructureData);
-            }
-        }
+        //private IEnumerator FillTerritoryStructuredatamap(int[,] structuredatamap, List<StructureData> id2StructureData, IEnumerable<Territory> id2Territory, int seed, StructureFactory structureFactory, int[,] heightmap, int[,] temperaturemap, int[,] humiditymap, BiomeSelector biomeSelector)
+        //{
+        //    foreach (var territory in id2Territory)
+        //    {
+        //        var territoryLength = territory.Range * 2 + 1;
+        //        var localStructuredatamap = new int[territoryLength, territoryLength];
+        //        var localID2StructureData = new List<StructureData>();
+        //        //为了领地的自由创建传入更多的参数作为参考信息
+        //        yield return territory.GenerateStructuremap(localStructuredatamap, localID2StructureData, seed, structureFactory, heightmap, temperaturemap, humiditymap, biomeSelector);
+        //        var currentCount = id2StructureData.Count;
+        //        for (int x = 0; x < territoryLength; x++)
+        //        {
+        //            for (int z = 0; z < territoryLength; z++)
+        //            {
+        //                var wx = territory.Pivot.x + x - territory.Range;
+        //                var wz = territory.Pivot.y + z - territory.Range;
+        //                structuredatamap[wx, wz] = localStructuredatamap[x, z] + currentCount;
+        //            }
+        //        }
+        //        id2StructureData.AddRange(localID2StructureData);
+        //    }
+        //}
 
 
         //private IEnumerator GenerateStructuresInTerritories(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, List<Territory> id2Territory, StructureFactory structureFactory, int seed)
@@ -327,7 +329,7 @@ namespace Terrain
                         {
                             var territory = id2Territory[territoryIndex];
                             var territoryRange = territory.Range;
-                            var territoryCenter = territory.CenterCoord;
+                            var territoryCenter = territory.WorldCoord;
                             var disSquare = (x - territoryCenter.x) * (x - territoryCenter.x) + (y - curHeight) * (y - curHeight) + (z - territoryCenter.y) * (z - territoryCenter.y);
                             territoryFactor = (float)disSquare / (territoryRange * territoryRange);
                         }
@@ -575,7 +577,7 @@ namespace Terrain
                 for (int i = 0; i < unmarkedTerritories.Count; i++)
                 {
                     var unmarkedTerritory = unmarkedTerritories[i];
-                    var distance = Mathf.Abs(currentMarkedTerritory.CenterCoord.x - unmarkedTerritory.CenterCoord.x) + Mathf.Abs(currentMarkedTerritory.CenterCoord.y - unmarkedTerritory.CenterCoord.y);
+                    var distance = Mathf.Abs(currentMarkedTerritory.WorldCoord.x - unmarkedTerritory.WorldCoord.x) + Mathf.Abs(currentMarkedTerritory.WorldCoord.y - unmarkedTerritory.WorldCoord.y);
                     if (distance < minDistance)
                     {
                         destination = unmarkedTerritory;
@@ -588,7 +590,7 @@ namespace Terrain
                 Territory departure = null;
                 foreach (var markedTerritory in markedTerritories)
                 {
-                    var distance = Mathf.Abs(markedTerritory.CenterCoord.x - destination.CenterCoord.x) + Mathf.Abs(markedTerritory.CenterCoord.y - destination.CenterCoord.y);
+                    var distance = Mathf.Abs(markedTerritory.WorldCoord.x - destination.WorldCoord.x) + Mathf.Abs(markedTerritory.WorldCoord.y - destination.WorldCoord.y);
                     if (distance < minDistance)
                     {
                         departure = markedTerritory;
@@ -598,7 +600,7 @@ namespace Terrain
 
                 markedTerritories.Add(destination);
                 unmarkedTerritories.RemoveAt(minDisUnmarkedTerritoryIndex);
-                var coords = GenerateCoordsOnPathByAStar(departure.CenterCoord, destination.CenterCoord, territorymap);
+                var coords = GenerateCoordsOnPathByAStar(departure.WorldCoord, destination.WorldCoord, territorymap);
                 paths.Add(new Path(departure, destination, coords));
                 yield return null;
             }
@@ -724,7 +726,7 @@ namespace Terrain
             {
                 var index = id2Territory.Count;
                 id2Territory.Add(territory);
-                territory.CenterCoord = new Coord2Int(cx, cy);
+                territory.WorldCoord = new Coord2Int(cx, cy);
 
                 for (int x = cx - territoryLength; x < cx + territoryLength; x++)
                 {
@@ -746,7 +748,7 @@ namespace Terrain
             previousRandomNum = value;
             return value;
         }
-        private IEnumerator FillEnvironmentalmaps(int seed, int length, int[,] heightmap, int[,] temperaturemap, int[,] humiditymap)
+        private IEnumerator FillEnvironmentalmaps(int[,] heightmap, int[,] temperaturemap, int[,] humiditymap, int seed, int length)
         {
             for (int x = 0; x < length; x++)
             {

@@ -6,20 +6,17 @@ namespace Terrain
 {
     internal class AdventurerCampTerritory : SpecialTerritory
     {
+        private int seed;
+        public AdventurerCampTerritory(int seed)
+        {
+            this.seed = seed;
+
+        }
         public override int Range { get { return 16; } }
 
-        internal override IEnumerator FillLocalStructuredatamap(int[,] localStructuredatamap, List<StructureData> localID2StructureData, int seed, StructureFactory structureFactory, int[,] heightmap, int[,] temperaturemap, int[,] humiditymap, BiomeSelector biomeSelector)
+        public override IEnumerator<Structuremap> GenerateStructuremap()
         {
-            //重置localStructuredatamap
-            for (int x = 0; x < localStructuredatamap.GetLength(0); x++)
-            {
-                for (int z = 0; z < localStructuredatamap.GetLength(1); z++)
-                {
-                    localStructuredatamap[x, z] = -1;
-                }
-            }
-
-            var worldCenter = new Coord3Int(CenterCoord.x, heightmap[CenterCoord.x, CenterCoord.y], CenterCoord.y);
+            var worldCenter = new Coord3Int(WorldCoord.x, heightmap[WorldCoord.x, WorldCoord.y], WorldCoord.y);
             var tent = structureFactory.GetStructure<Tent>();
             var bonfire = structureFactory.GetStructure<Bonfire>();
 
@@ -37,5 +34,6 @@ namespace Terrain
 
             yield return null;
         }
+
     }
 }

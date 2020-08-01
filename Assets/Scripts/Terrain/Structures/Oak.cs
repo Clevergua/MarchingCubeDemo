@@ -6,10 +6,9 @@ namespace Terrain
 {
     internal class Oak : Structure
     {
-        internal StructureData GetData(Coord3Int randomFactor, int seed)
+        public Oak(Coord3Int randomFactor, int seed)
         {
-            var oakData = GenerateOakData(randomFactor, seed);
-            return new StructureData(oakData);
+            data = GenerateOakData(randomFactor, seed);
         }
 
         private byte[,,] GenerateOakData(Coord3Int randomFactor, int seed)
@@ -101,7 +100,6 @@ namespace Terrain
             }
             return data;
         }
-
         private void SetLeaves(byte[,,] coord2Block, int x, int y, int z)
         {
             SetLeaf(coord2Block, x + 1, y, z);
@@ -110,7 +108,6 @@ namespace Terrain
             SetLeaf(coord2Block, x, y, z + 1);
             SetLeaf(coord2Block, x, y, z - 1);
         }
-
         private void SetLeaf(byte[,,] coord2Block, int x, int y, int z)
         {
             if (coord2Block[x, y, z] == (byte)BlockType.Air)
@@ -118,12 +115,10 @@ namespace Terrain
                 coord2Block[x, y, z] = (byte)BlockType.Leaf;
             }
         }
-
         private void SetCoord2Block(byte[,,] blockmap, Coord3Int coord, byte blockType)
         {
             blockmap[coord.x, coord.y, coord.z] = blockType;
         }
-
         private Coord3Int GetRandomHorizontalDirection(int x, int y, int z, int seed)
         {
             var dirs = new Coord3Int[]

@@ -1,26 +1,31 @@
 ﻿using Core;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Terrain
 {
+    /// <summary>
+    /// 领地
+    /// </summary>
     internal abstract class Territory
     {
+        protected int[,] structuremap;
+        protected List<Structure> id2Structure;
+        public Territory()
+        {
+            id2Structure = new List<Structure>();
+            var length = Range * 2 + 1;
+            structuremap = new int[length, length];
+            for (int x = 0; x < structuremap.GetLength(0); x++)
+            {
+                for (int z = 0; z < structuremap.GetLength(1); z++)
+                {
+                    structuremap[x, z] = -1;
+                }
+            }
+        }
         public abstract int Range { get; }
-        public Coord2Int CenterCoord { get; internal set; }
+        public abstract IEnumerator<Structuremap> GenerateStructuremap();
+        public Coord2Int WorldCoord { get; internal set; }
 
-        /// <summary>
-        /// 填充localStructuredatamap,与localID2StructureData的方法
-        /// </summary>
-        /// <param name="localStructuredatamap">长度Range*2+1的二维数组</param>
-        /// <param name="localID2StructureData">需要在方法中填充的空列表</param>
-        /// <param name="seed"></param>
-        /// <param name="structureFactory"></param>
-        /// <param name="heightmap"></param>
-        /// <param name="temperaturemap"></param>
-        /// <param name="humiditymap"></param>
-        /// <param name="biomeSelector"></param>
-        /// <returns></returns>
-        internal abstract IEnumerator FillLocalStructuredatamap(int[,] localStructuredatamap, List<StructureData> localID2StructureData, int seed, StructureFactory structureFactory, int[,] heightmap, int[,] temperaturemap, int[,] humiditymap, BiomeSelector biomeSelector);
     }
 }

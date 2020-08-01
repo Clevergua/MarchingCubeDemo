@@ -20,7 +20,7 @@ public class GameLoop : MonoBehaviour
         terrainGen = new TerrainGenerator();
         var seed = Random.Range(int.MinValue, int.MaxValue);
         Debug.Log(seed);
-        StartCoroutine(terrainGen.GenerateLayer(seed, 16));
+        StartCoroutine(terrainGen.GenerateIsland(seed, 16));
     }
     IEnumerator Show()
     {
