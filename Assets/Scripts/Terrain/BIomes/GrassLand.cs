@@ -49,7 +49,7 @@ namespace Terrain
                             var coord = new Coord3Int(x, y, z);
                             var oak = structureFactory.GetStructure<Oak>();
                             StructureData data = oak.GetData(coord, seed);
-                            var startPoint = coord - data.BottomCenterCoord;
+                            var startPoint = coord - data.XZCenter;
                             if (startPoint.x < 0 || startPoint.x + data.Blockmap.GetLength(0) > blockmap.GetLength(0) ||
                                 startPoint.y < 0 || startPoint.y + data.Blockmap.GetLength(1) > blockmap.GetLength(1) ||
                                 startPoint.z < 0 || startPoint.z + data.Blockmap.GetLength(2) > blockmap.GetLength(2))

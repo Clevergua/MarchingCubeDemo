@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using UnityEditor;
 using UnityEngine;
 
 namespace Terrain
@@ -70,9 +69,6 @@ namespace Terrain
             var structuredatamap = new int[length, length];
             var id2StructureData = new List<StructureData>();
             yield return FillTerritoryStructuredatamap(structuredatamap, id2StructureData, id2Territory, seed, structureFactory, heightmap, temperaturemap, humiditymap, biomeSelector);
-
-
-
 
             //currentOperation = "正在生成路径图";
             //progress = 15;

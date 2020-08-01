@@ -1,4 +1,5 @@
 ﻿using Core;
+using UnityEngine;
 
 namespace Terrain
 {
@@ -11,5 +12,6 @@ namespace Terrain
     /// </summary>
     internal abstract class Structure
     {
+
     }
 }
