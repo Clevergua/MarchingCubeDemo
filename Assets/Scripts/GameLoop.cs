@@ -18,9 +18,8 @@ public class GameLoop : MonoBehaviour
     {
         //Create level
         terrainGen = new TerrainGenerator();
-        var seed = Random.Range(int.MinValue, int.MaxValue);
-        Debug.Log(seed);
-        StartCoroutine(terrainGen.GenerateIsland(seed, 16));
+
+        StartCoroutine(terrainGen.TTT());
     }
     IEnumerator Show()
     {
@@ -59,11 +58,11 @@ public class GameLoop : MonoBehaviour
     }
     private void Update()
     {
-        text.text = $"{terrainGen.currentOperation}::{terrainGen.progress}";
-        if (terrainGen.isDone && !hasShown)
-        {
-            hasShown = true;
-            StartCoroutine(Show());
-        }
+        //text.text = $"{terrainGen.currentOperation}::{terrainGen.progress}";
+        //if (terrainGen.isDone && !hasShown)
+        //{
+        //    hasShown = true;
+        //    StartCoroutine(Show());
+        //}
     }
 }

@@ -24,8 +24,16 @@ namespace Terrain
             }
         }
         public abstract int Range { get; }
-        public abstract IEnumerator<Structuremap> GenerateStructuremap();
+        public int Length { get { return Range * 2 + 1; } }
         public Coord2Int WorldCoord { get; internal set; }
+        public Coord2Int Pivot2Int
+        {
+            get
+            {
+                return new Coord2Int(Range, Range);
+            }
+        }
+        public abstract IEnumerator<Structuremap> GenerateStructuremap();
 
     }
 }

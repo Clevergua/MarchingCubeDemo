@@ -8,7 +8,7 @@ namespace Terrain
     internal class BiomeSelector
     {
         private Dictionary<EnvironmentDegree, Biome> environmentDegree2Biome;
-        public BiomeSelector(IReadOnlyDictionary<EnvironmentDegree, string> environmentDegree2BiomeName, StructureFactory structureFactory)
+        public BiomeSelector(IReadOnlyDictionary<EnvironmentDegree, string> environmentDegree2BiomeName)
         {
             environmentDegree2Biome = new Dictionary<EnvironmentDegree, Biome>();
             var assembly = Assembly.GetExecutingAssembly();
@@ -17,7 +17,7 @@ namespace Terrain
             {
                 if (type.IsSubclassOf(typeof(Biome)) && !type.IsAbstract)
                 {
-                    var instance = Activator.CreateInstance(type, structureFactory) as Biome;
+                    var instance = Activator.CreateInstance(type) as Biome;
                     typeName2Instance.Add(type.Name, instance);
                 }
             }

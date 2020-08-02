@@ -5,12 +5,12 @@ namespace Terrain
 {
     internal class Tent : DataDrivenStructure
     {
-        public Tent(Coord3Int ranFactor, int seed) : base()
+        public Tent(int ranFactor, int seed) : base()
         {
             RandomlyDyeTent(ranFactor, seed);
         }
 
-        private void RandomlyDyeTent(Coord3Int ranFactor, int seed)
+        private void RandomlyDyeTent(int ranFactor, int seed)
         {
             var fiberBlocks = new BlockType[]
             {
@@ -23,7 +23,7 @@ namespace Terrain
                     BlockType.RedFiber,
                     BlockType.YellowFiber,
             };
-            var index = RNG.Random3(ranFactor.x, ranFactor.y, ranFactor.z, seed + 2134) % fiberBlocks.Length;
+            var index = RNG.Random1(ranFactor, seed + 2134) % fiberBlocks.Length;
             index = index > 0 ? index : -index;
             for (int x = 0; x < data.GetLength(0); x++)
             {
