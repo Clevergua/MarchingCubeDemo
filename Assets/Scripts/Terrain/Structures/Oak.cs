@@ -8,7 +8,7 @@ namespace Terrain
     {
         public Oak(Coord3Int randomFactor, int seed)
         {
-            data = GenerateOakData(randomFactor, seed);
+            coord2Block = GenerateOakData(randomFactor, seed);
         }
 
         private byte[,,] GenerateOakData(Coord3Int randomFactor, int seed)

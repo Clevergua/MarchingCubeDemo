@@ -14,7 +14,7 @@ namespace Terrain
             var formatter = new BinaryFormatter();
             var path = System.IO.Path.Combine(Application.streamingAssetsPath, fileName);
             var stream = File.OpenRead(path);
-            data = formatter.Deserialize(stream) as byte[,,];
+            coord2Block = formatter.Deserialize(stream) as byte[,,];
         }
     }
 }

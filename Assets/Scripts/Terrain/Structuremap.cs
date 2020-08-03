@@ -6,12 +6,19 @@ namespace Terrain
     internal class Structuremap
     {
         public int[,] coord2ID;
-        public IReadOnlyList<Structure> id2Structure;
+        public List<Structure> id2Structure;
 
-        public Structuremap(int[,] coord2ID, IReadOnlyList<Structure> id2Structure)
+        public Structuremap(int xLength, int zLength)
         {
-            this.coord2ID = coord2ID ?? throw new ArgumentNullException();
-            this.id2Structure = id2Structure ?? throw new ArgumentNullException();
+            coord2ID = new int[xLength, zLength];
+            for (int x = 0; x < xLength; x++)
+            {
+                for (int z = 0; z < zLength; z++)
+                {
+                    coord2ID[x, z] = -1;
+                }
+            }
+            id2Structure = new List<Structure>();
         }
     }
 }

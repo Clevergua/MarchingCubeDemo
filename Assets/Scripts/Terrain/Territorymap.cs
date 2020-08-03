@@ -8,15 +8,16 @@ namespace Terrain
         public int[,] coord2ID;
         public List<Territory> id2Territory;
 
-        public Territorymap(int[,] coord2ID, List<Territory> id2Territory)
+        public Territorymap(int xLength, int zLength)
         {
-            this.coord2ID = coord2ID ?? throw new ArgumentNullException();
-            this.id2Territory = id2Territory ?? throw new ArgumentNullException();
+            coord2ID = new int[xLength, zLength];
+            id2Territory = new List<Territory>();
+            Reset();
         }
 
         internal void Reset()
         {
-            id2Territory.Clear();
+            id2Territory?.Clear();
             for (int x = 0; x < coord2ID.GetLength(0); x++)
             {
                 for (int z = 0; z < coord2ID.GetLength(1); z++)

@@ -8,17 +8,17 @@ namespace Terrain
     /// </summary>
     internal abstract class Structure
     {
-        protected byte[,,] data;
+        protected byte[,,] coord2Block;
         protected Direction direction;
 
         /// <summary>
         /// 建筑数据
         /// </summary>
-        public byte[,,] Data
+        public byte[,,] Coord2Block
         {
             get
             {
-                return data;
+                return coord2Block;
             }
         }
         /// <summary>
@@ -43,7 +43,7 @@ namespace Terrain
         {
             get
             {
-                return new Coord2Int(data.GetLength(0) / 2, data.GetLength(2) / 2);
+                return new Coord2Int(coord2Block.GetLength(0) / 2, coord2Block.GetLength(2) / 2);
             }
         }
         /// <summary>
@@ -53,7 +53,7 @@ namespace Terrain
         {
             get
             {
-                return new Coord3Int(data.GetLength(0) / 2, data.GetLength(1) / 2, data.GetLength(2) / 2);
+                return new Coord3Int(coord2Block.GetLength(0) / 2, coord2Block.GetLength(1) / 2, coord2Block.GetLength(2) / 2);
             }
         }
 
@@ -68,50 +68,50 @@ namespace Terrain
                     }
                 case 1:
                     {
-                        var newData = new byte[data.GetLength(2), data.GetLength(1), data.GetLength(0)];
-                        for (int x = 0; x < data.GetLength(0); x++)
+                        var newData = new byte[coord2Block.GetLength(2), coord2Block.GetLength(1), coord2Block.GetLength(0)];
+                        for (int x = 0; x < coord2Block.GetLength(0); x++)
                         {
-                            for (int z = 0; z < data.GetLength(2); z++)
+                            for (int z = 0; z < coord2Block.GetLength(2); z++)
                             {
-                                for (int y = 0; y < data.GetLength(1); y++)
+                                for (int y = 0; y < coord2Block.GetLength(1); y++)
                                 {
-                                    newData[z, y, data.GetLength(0) - 1 - x] = data[x, y, z];
+                                    newData[z, y, coord2Block.GetLength(0) - 1 - x] = coord2Block[x, y, z];
                                 }
                             }
                         }
-                        data = newData;
+                        coord2Block = newData;
                     }
                     break;
                 case 2:
                     {
-                        var newData = new byte[data.GetLength(0), data.GetLength(1), data.GetLength(2)];
-                        for (int x = 0; x < data.GetLength(0); x++)
+                        var newData = new byte[coord2Block.GetLength(0), coord2Block.GetLength(1), coord2Block.GetLength(2)];
+                        for (int x = 0; x < coord2Block.GetLength(0); x++)
                         {
-                            for (int z = 0; z < data.GetLength(2); z++)
+                            for (int z = 0; z < coord2Block.GetLength(2); z++)
                             {
-                                for (int y = 0; y < data.GetLength(1); y++)
+                                for (int y = 0; y < coord2Block.GetLength(1); y++)
                                 {
-                                    newData[data.GetLength(0) - 1 - x, y, data.GetLength(2) - 1 - z] = data[x, y, z];
+                                    newData[coord2Block.GetLength(0) - 1 - x, y, coord2Block.GetLength(2) - 1 - z] = coord2Block[x, y, z];
                                 }
                             }
                         }
-                        data = newData;
+                        coord2Block = newData;
                     }
                     break;
                 case 3:
                     {
-                        var newData = new byte[data.GetLength(2), data.GetLength(1), data.GetLength(0)];
-                        for (int x = 0; x < data.GetLength(0); x++)
+                        var newData = new byte[coord2Block.GetLength(2), coord2Block.GetLength(1), coord2Block.GetLength(0)];
+                        for (int x = 0; x < coord2Block.GetLength(0); x++)
                         {
-                            for (int z = 0; z < data.GetLength(2); z++)
+                            for (int z = 0; z < coord2Block.GetLength(2); z++)
                             {
-                                for (int y = 0; y < data.GetLength(1); y++)
+                                for (int y = 0; y < coord2Block.GetLength(1); y++)
                                 {
-                                    newData[data.GetLength(2) - 1 - z, y, x] = data[x, y, z];
+                                    newData[coord2Block.GetLength(2) - 1 - z, y, x] = coord2Block[x, y, z];
                                 }
                             }
                         }
-                        data = newData;
+                        coord2Block = newData;
                     }
                     break;
                 default:

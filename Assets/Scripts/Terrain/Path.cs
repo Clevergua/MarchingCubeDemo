@@ -9,6 +9,7 @@ namespace Terrain
         private Territory destination;
         private IReadOnlyList<Coord2Int> coords;
 
+
         public Territory Departure { get => departure; }
         public Territory Destination { get => destination; }
         public IReadOnlyList<Coord2Int> Coords { get => coords; }

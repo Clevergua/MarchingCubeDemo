@@ -19,18 +19,7 @@ namespace Terrain
         {
             var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
             Debug.Log(seed);
-            List<Territory> necessaryTerritories = new List<Territory>()
-            {
-                new AdventurerCampTerritory(seed),
-                new AdventurerCampTerritory(seed + 1),
-            };
-            List<Territory> normalTerritories = new List<Territory>()
-            {
-                new  AdventurerCampTerritory(seed + 2),
-                new  AdventurerCampTerritory(seed + 2),
-                new  AdventurerCampTerritory(seed + 2),
-                new  AdventurerCampTerritory(seed + 2),
-            };
+
             var grassLand = new GrassLand();
 
             IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome = new Dictionary<EnvironmentDegree, Biome>()
@@ -48,12 +37,12 @@ namespace Terrain
                 { EnvironmentDegree.HighTemperatureHighHumidity, grassLand},
             };
 
-            yield return GenerateIsland(seed, 16, necessaryTerritories, normalTerritories, environmentDegree2Biome);
+            yield return GenerateIsland(seed, 16, environmentDegree2Biome);
         }
 
 
 
-        internal IEnumerator<Island> GenerateIsland(int seed, int worldLength, List<Territory> necessaryTerritories, List<Territory> normalTerritories, IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome)
+        internal IEnumerator<Island> GenerateIsland(int seed, int worldLength, IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome)
         {
             var length = worldLength * Constants.ChunkLength;
 
@@ -63,7 +52,7 @@ namespace Terrain
                 progress = 5;
                 yield return null;
 
-                var enumerator = FillEnvironmentalmaps(seed, length);
+                var enumerator = FillEnvironmentalmaps(seed, length, environmentDegree2Biome);
                 while (enumerator.MoveNext()) { yield return null; }
                 environmentmap = enumerator.Current;
             }
@@ -74,20 +63,20 @@ namespace Terrain
                 progress = 10;
                 yield return null;
 
+                List<Territory> necessaryTerritories = new List<Territory>();
+                List<Territory> normalTerritories = new List<Territory>();
+
                 var enumerator = GenerateTerritorymap(necessaryTerritories, normalTerritories, length, seed);
                 while (enumerator.MoveNext()) { yield return null; }
                 territorymap = enumerator.Current;
-            }
 
-
-            {
                 foreach (var item in territorymap.id2Territory)
                 {
-                    item.GenerateStructuremap()
+                    var e = item.GenerateStructuremap(environmentmap, seed);
+                    while (e.MoveNext()) { yield return null; }
+                    var structuremap = e.Current;
                 }
             }
-
-
 
             #region 绘制图
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
@@ -116,7 +105,7 @@ namespace Terrain
                         //}
                         //else
                         //{
-                        var c = new Color((float)environmentmap.temperaturemap[x, y] / 100, 0, 0);
+                        var c = new Color((float)environmentmap.baseTemperaturemap[x, y] / 100, 0, 0);
                         texture.SetPixel(x, y, c);
                         //}
                     }
@@ -187,9 +176,41 @@ namespace Terrain
             progress = 100;
             isDone = true;
         }
+        private IEnumerator<Environmentmap> FillEnvironmentalmaps(int seed, int length, IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome)
+        {
+            var environmentmap = new Environmentmap(length, length, environmentDegree2Biome);
+            for (int x = 0; x < length; x++)
+            {
+                for (int z = 0; z < length; z++)
+                {
+                    var heightNoiseDensity = 0.007f;
+                    var heightNoise = PerlinNoise.PerlinNoise2D(seed + 1232, x * heightNoiseDensity, z * heightNoiseDensity) * 1.578f * 0.5f + 0.5f;
+                    environmentmap.baseHeightmap[x, z] = (int)(Mathf.Lerp(Constants.MinHeight, Constants.MaxHeight, heightNoise));
+
+                    var temperatureNoiseDensity = 0.003f;
+                    var temperatureNoise = PerlinNoise.PerlinNoise2D(seed + 8674, x * temperatureNoiseDensity, z * temperatureNoiseDensity) * 1.578f;
+                    //下面两步处理是为了让噪声分布结果平均
+                    var t1 = temperatureNoise * temperatureNoise;
+                    temperatureNoise *= 1.4f - 0.4f * t1;
+
+                    temperatureNoise = temperatureNoise * 0.5f + 0.5f;
+                    environmentmap.baseTemperaturemap[x, z] = (int)(Mathf.Lerp(Constants.MinTemperature, Constants.MaxTemperature, temperatureNoise));
+
+                    var humidityNoiseDensity = 0.003f;
+                    var humidityNoise = PerlinNoise.PerlinNoise2D(seed + 96, x * humidityNoiseDensity, z * humidityNoiseDensity) * 1.578f;
+                    var t2 = humidityNoise * humidityNoise;
+                    humidityNoise *= 1.4f - 0.4f * t2;
+
+                    humidityNoise = humidityNoise * 0.5f + 0.5f;
+                    environmentmap.baseHumiditymap[x, z] = (int)(Mathf.Lerp(Constants.MinHumidity, Constants.MaxHumidity, humidityNoise));
+                }
+                yield return null;
+            }
+            yield return environmentmap;
+        }
         private IEnumerator<Territorymap> GenerateTerritorymap(List<Territory> necessaryTerritories, List<Territory> normalTerritories, int length, int seed)
         {
-            Territorymap territorymap = new Territorymap(new int[length, length], new List<Territory>());
+            Territorymap territorymap = new Territorymap(length, length);
             //填充必要领地
             {
                 //根据范围进行排序
@@ -326,356 +347,355 @@ namespace Terrain
         //    }
         //}
 
-        private IEnumerator CreatePlants(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
-        {
-            var length = blockmap.GetLength(0);
-            for (int x = 0; x < length; x++)
-            {
-                for (int z = 0; z < length; z++)
-                {
-                    var altitudeTemperature = Constants.CalTemperature(temperaturemap[x, z], heightmap[x, z]);
-                    var humidity = humiditymap[x, z];
-                    var biome = biomeSelector.Select(altitudeTemperature, humidity);
-                    biome.Planting(blockmap, x, z, temperaturemap, humiditymap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
-                }
-                yield return null;
-            }
-        }
+        //private IEnumerator CreatePlants(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
+        //{
+        //    var length = blockmap.GetLength(0);
+        //    for (int x = 0; x < length; x++)
+        //    {
+        //        for (int z = 0; z < length; z++)
+        //        {
+        //            var altitudeTemperature = Constants.CalTemperature(temperaturemap[x, z], heightmap[x, z]);
+        //            var humidity = humiditymap[x, z];
+        //            var biome = biomeSelector.Select(altitudeTemperature, humidity);
+        //            biome.Planting(blockmap, x, z, temperaturemap, humiditymap, heightmap, territorymap, id2Territory, coord2MinDistanceFromPath, seed);
+        //        }
+        //        yield return null;
+        //    }
+        //}
+        //private IEnumerator CreateSurfaceLayer(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int seed)
+        //{
+        //    var length = blockmap.GetLength(0);
+        //    for (int x = 0; x < length; x++)
+        //    {
+        //        for (int z = 0; z < length; z++)
+        //        {
+        //            var altitudeTemperature = Constants.CalTemperature(temperaturemap[x, z], heightmap[x, z]);
+        //            var humidity = humiditymap[x, z];
+        //            var biome = biomeSelector.Select(altitudeTemperature, humidity);
+        //            biome.Growing(blockmap, x, z, seed);
+        //        }
+        //        yield return null;
+        //    }
+        //}
+        //private IEnumerator FillPits(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int seed)
+        //{
+        //    var length = blockmap.GetLength(0);
+        //    var height = blockmap.GetLength(1);
+        //    var processedPitCoords = new HashSet<Coord3Int>();
+        //    byte pit = 2;
 
-        private IEnumerator CreateSurfaceLayer(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int seed)
-        {
-            var length = blockmap.GetLength(0);
-            for (int x = 0; x < length; x++)
-            {
-                for (int z = 0; z < length; z++)
-                {
-                    var altitudeTemperature = Constants.CalTemperature(temperaturemap[x, z], heightmap[x, z]);
-                    var humidity = humiditymap[x, z];
-                    var biome = biomeSelector.Select(altitudeTemperature, humidity);
-                    biome.Growing(blockmap, x, z, seed);
-                }
-                yield return null;
-            }
-        }
-        private IEnumerator FillPits(byte[,,] blockmap, BiomeSelector biomeSelector, int[,] temperaturemap, int[,] humiditymap, int[,] heightmap, int seed)
-        {
-            var length = blockmap.GetLength(0);
-            var height = blockmap.GetLength(1);
-            var processedPitCoords = new HashSet<Coord3Int>();
-            byte pit = 2;
+        //    for (int x = 0; x < length; x++)
+        //    {
+        //        for (int z = 0; z < length; z++)
+        //        {
+        //            for (int y = 0; y < height; y++)
+        //            {
+        //                var currentCoord = new Coord3Int(x, y, z);
+        //                //如果当前点是未处理过的凹洞
+        //                if (blockmap[x, y, z] == pit && !processedPitCoords.Contains(currentCoord))
+        //                {
+        //                    //选择一个生物群落来处理凹洞
+        //                    var altitudeTemperature = Constants.CalTemperature(temperaturemap[x, z], heightmap[x, z]);
+        //                    var humidity = humiditymap[x, z];
+        //                    var biome = biomeSelector.Select(altitudeTemperature, humidity);
 
-            for (int x = 0; x < length; x++)
-            {
-                for (int z = 0; z < length; z++)
-                {
-                    for (int y = 0; y < height; y++)
-                    {
-                        var currentCoord = new Coord3Int(x, y, z);
-                        //如果当前点是未处理过的凹洞
-                        if (blockmap[x, y, z] == pit && !processedPitCoords.Contains(currentCoord))
-                        {
-                            //选择一个生物群落来处理凹洞
-                            var altitudeTemperature = Constants.CalTemperature(temperaturemap[x, z], heightmap[x, z]);
-                            var humidity = humiditymap[x, z];
-                            var biome = biomeSelector.Select(altitudeTemperature, humidity);
+        //                    var pitCoordsGroup = new List<Coord3Int>();
+        //                    var queue = new Queue<Coord3Int>();
+        //                    queue.Enqueue(currentCoord);
+        //                    pitCoordsGroup.Add(currentCoord);
+        //                    processedPitCoords.Add(currentCoord);
+        //                    while (queue.Count > 0)
+        //                    {
+        //                        var current = queue.Dequeue();
+        //                        var neighbors = new Coord3Int[]
+        //                        {
+        //                                new Coord3Int(current.x+1, current.y, current.z),
+        //                                new Coord3Int(current.x-1, current.y, current.z),
+        //                                new Coord3Int(current.x, current.y+1, current.z),
+        //                                new Coord3Int(current.x, current.y-1, current.z),
+        //                                new Coord3Int(current.x, current.y, current.z+1),
+        //                                new Coord3Int(current.x, current.y, current.z-1)
+        //                        };
+        //                        foreach (var c in neighbors)
+        //                        {
+        //                            if (c.x < 0 || c.y < 0 || c.z < 0 || c.x >= length || c.z >= length || c.y >= height)
+        //                            {
+        //                                //越界抛弃..
+        //                            }
+        //                            else
+        //                            {
+        //                                //当周围是凹洞且未被处理
+        //                                if (blockmap[c.x, c.y, c.z] == pit && !processedPitCoords.Contains(c))
+        //                                {
+        //                                    pitCoordsGroup.Add(c);
+        //                                    queue.Enqueue(c);
+        //                                    processedPitCoords.Add(c);
+        //                                }
+        //                            }
+        //                        }
+        //                    }
+        //                    biome.ProcessPitCoords(pitCoordsGroup, blockmap, heightmap, seed);
+        //                    yield return null;
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+        //private IEnumerator NoiseBlockmap(byte[,,] blockmap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
+        //{
+        //    var length = blockmap.GetLength(0);
+        //    var height = blockmap.GetLength(1);
 
-                            var pitCoordsGroup = new List<Coord3Int>();
-                            var queue = new Queue<Coord3Int>();
-                            queue.Enqueue(currentCoord);
-                            pitCoordsGroup.Add(currentCoord);
-                            processedPitCoords.Add(currentCoord);
-                            while (queue.Count > 0)
-                            {
-                                var current = queue.Dequeue();
-                                var neighbors = new Coord3Int[]
-                                {
-                                        new Coord3Int(current.x+1, current.y, current.z),
-                                        new Coord3Int(current.x-1, current.y, current.z),
-                                        new Coord3Int(current.x, current.y+1, current.z),
-                                        new Coord3Int(current.x, current.y-1, current.z),
-                                        new Coord3Int(current.x, current.y, current.z+1),
-                                        new Coord3Int(current.x, current.y, current.z-1)
-                                };
-                                foreach (var c in neighbors)
-                                {
-                                    if (c.x < 0 || c.y < 0 || c.z < 0 || c.x >= length || c.z >= length || c.y >= height)
-                                    {
-                                        //越界抛弃..
-                                    }
-                                    else
-                                    {
-                                        //当周围是凹洞且未被处理
-                                        if (blockmap[c.x, c.y, c.z] == pit && !processedPitCoords.Contains(c))
-                                        {
-                                            pitCoordsGroup.Add(c);
-                                            queue.Enqueue(c);
-                                            processedPitCoords.Add(c);
-                                        }
-                                    }
-                                }
-                            }
-                            biome.ProcessPitCoords(pitCoordsGroup, blockmap, heightmap, seed);
-                            yield return null;
-                        }
-                    }
-                }
-            }
-        }
-        private IEnumerator NoiseBlockmap(byte[,,] blockmap, int[,] heightmap, int[,] territorymap, IReadOnlyList<Territory> id2Territory, IReadOnlyDictionary<Coord3Int, int> coord2MinDistanceFromPath, int seed)
-        {
-            var length = blockmap.GetLength(0);
-            var height = blockmap.GetLength(1);
-
-            byte entity = 1;
-            byte pit = 2;
-
-
-            for (int x = 0; x < length; x++)
-            {
-                for (int z = 0; z < length; z++)
-                {
-                    var curHeight = heightmap[x, z];
-                    for (int y = 0; y < height; y++)
-                    {
-                        //使用时候factor范围为0-1
-                        //factor * noise
-                        var currentCoord = new Coord3Int(x, y, z);
-
-                        //高度差为0的时:heightFactor = 1
-                        //高度差达到NoiseImpactRange时:factor = 0
-                        //更大差值时候:heightFactor < 0
-                        var heightDifference = Mathf.Abs(y - curHeight);
-                        var heightFactor = ((float)Constants.HeightNoiseImpactRange - heightDifference) / Constants.HeightNoiseImpactRange;
-                        //高度噪声倍率: 1.96 ~ 0.16
-                        //减少悬空块的产生
-                        var heightNoiseMagnification = heightFactor + 0.4f;
-                        heightNoiseMagnification *= heightNoiseMagnification;
-                        //在领地中心为:territoryFactor = 0;
-                        //距离领地距离达到Range时:territoryFactor = 1;
-                        //更远距离时候:territoryFactor > 1;
-                        var territoryIndex = territorymap[x, z];
-                        var territoryFactor = 0f;
-                        if (territoryIndex == -1)
-                        {
-                            territoryFactor = 1;
-                        }
-                        else
-                        {
-                            var territory = id2Territory[territoryIndex];
-                            var territoryRange = territory.Range;
-                            var territoryCenter = territory.WorldCoord;
-                            var disSquare = (x - territoryCenter.x) * (x - territoryCenter.x) + (y - curHeight) * (y - curHeight) + (z - territoryCenter.y) * (z - territoryCenter.y);
-                            territoryFactor = (float)disSquare / (territoryRange * territoryRange);
-                        }
+        //    byte entity = 1;
+        //    byte pit = 2;
 
 
-                        //通过coord2MinDistanceFromPath查找并影响权重
-                        //距离道路为0时:pathFactor = 0
-                        //距离道路为Range时:pathFactor = 1
-                        //超出距离时:pathFactor = 1
-                        var pathFactor = 0f;
-                        if (coord2MinDistanceFromPath.ContainsKey(currentCoord))
-                        {
-                            //dis最小值为0 最大值Constants.PathRange
-                            var dis = coord2MinDistanceFromPath[currentCoord];
-                            pathFactor = (float)dis / Constants.PathRange;
-                            pathFactor *= pathFactor;
-                        }
-                        else
-                        {
-                            pathFactor = 1;
-                        }
+        //    for (int x = 0; x < length; x++)
+        //    {
+        //        for (int z = 0; z < length; z++)
+        //        {
+        //            var curHeight = heightmap[x, z];
+        //            for (int y = 0; y < height; y++)
+        //            {
+        //                //使用时候factor范围为0-1
+        //                //factor * noise
+        //                var currentCoord = new Coord3Int(x, y, z);
 
-                        //获取最小值的factory
-                        var factor = float.MaxValue;
-                        var factors = new float[] { heightFactor, territoryFactor, pathFactor };
-                        foreach (var f in factors) { if (f < factor) factor = f; }
-                        factor = Mathf.Clamp(factor, 0, 1);
+        //                //高度差为0的时:heightFactor = 1
+        //                //高度差达到NoiseImpactRange时:factor = 0
+        //                //更大差值时候:heightFactor < 0
+        //                var heightDifference = Mathf.Abs(y - curHeight);
+        //                var heightFactor = ((float)Constants.HeightNoiseImpactRange - heightDifference) / Constants.HeightNoiseImpactRange;
+        //                //高度噪声倍率: 1.96 ~ 0.16
+        //                //减少悬空块的产生
+        //                var heightNoiseMagnification = heightFactor + 0.4f;
+        //                heightNoiseMagnification *= heightNoiseMagnification;
+        //                //在领地中心为:territoryFactor = 0;
+        //                //距离领地距离达到Range时:territoryFactor = 1;
+        //                //更远距离时候:territoryFactor > 1;
+        //                var territoryIndex = territorymap[x, z];
+        //                var territoryFactor = 0f;
+        //                if (territoryIndex == -1)
+        //                {
+        //                    territoryFactor = 1;
+        //                }
+        //                else
+        //                {
+        //                    var territory = id2Territory[territoryIndex];
+        //                    var territoryRange = territory.Range;
+        //                    var territoryCenter = territory.WorldCoord;
+        //                    var disSquare = (x - territoryCenter.x) * (x - territoryCenter.x) + (y - curHeight) * (y - curHeight) + (z - territoryCenter.y) * (z - territoryCenter.y);
+        //                    territoryFactor = (float)disSquare / (territoryRange * territoryRange);
+        //                }
 
-                        if (y <= curHeight)
-                        {
-                            blockmap[x, y, z] = entity;
-                        }
-                        if (factor > 0)
-                        {
-                            var noiseDensity = 0.03f;
-                            var noise = PerlinNoise.SuperimposedOctave3D(seed + 2213, x * noiseDensity, y * noiseDensity, z * noiseDensity, 2) * 0.666f;
-                            noise *= heightNoiseMagnification;
-                            noise *= factor;
-                            if (noise > 0.1f)
-                            {
-                                blockmap[x, y, z] = entity;
-                            }
-                            else if (noise < -0.2f && blockmap[x, y, z] == 1)
-                            {
-                                blockmap[x, y, z] = pit;
-                            }
-                        }
-                    }
-                }
-                yield return null;
-            }
-        }
-        private IEnumerator GenerateCoord2MinDistanceFromPath(Dictionary<Coord3Int, int> coord2MinDistanceFromPath, IReadOnlyList<Path> paths, int length, int height, int[,] heightmap)
-        {
-            for (int i = 0; i < paths.Count; i++)
-            {
-                var path = paths[i];
-                foreach (var coord2 in path.Coords)
-                {
-                    var center = new Coord3Int(coord2.x, heightmap[coord2.x, coord2.y], coord2.y);
 
-                    //限制min,max避免越界
-                    var minx = center.x - Constants.PathRange < 0 ? 0 : center.x - Constants.PathRange;
-                    var miny = center.y - Constants.PathRange < 0 ? 0 : center.y - Constants.PathRange;
-                    var minz = center.z - Constants.PathRange < 0 ? 0 : center.z - Constants.PathRange;
+        //                //通过coord2MinDistanceFromPath查找并影响权重
+        //                //距离道路为0时:pathFactor = 0
+        //                //距离道路为Range时:pathFactor = 1
+        //                //超出距离时:pathFactor = 1
+        //                var pathFactor = 0f;
+        //                if (coord2MinDistanceFromPath.ContainsKey(currentCoord))
+        //                {
+        //                    //dis最小值为0 最大值Constants.PathRange
+        //                    var dis = coord2MinDistanceFromPath[currentCoord];
+        //                    pathFactor = (float)dis / Constants.PathRange;
+        //                    pathFactor *= pathFactor;
+        //                }
+        //                else
+        //                {
+        //                    pathFactor = 1;
+        //                }
 
-                    var maxx = center.x + Constants.PathRange < length ? center.x + Constants.PathRange : length - 1;
-                    var maxy = center.y + Constants.PathRange < height ? center.y + Constants.PathRange : height - 1;
-                    var maxz = center.z + Constants.PathRange < length ? center.z + Constants.PathRange : length - 1;
+        //                //获取最小值的factory
+        //                var factor = float.MaxValue;
+        //                var factors = new float[] { heightFactor, territoryFactor, pathFactor };
+        //                foreach (var f in factors) { if (f < factor) factor = f; }
+        //                factor = Mathf.Clamp(factor, 0, 1);
 
-                    for (int x = minx; x <= maxx; x++)
-                    {
-                        for (int y = miny; y < maxy; y++)
-                        {
-                            for (int z = minz; z < maxz; z++)
-                            {
-                                var current = new Coord3Int(x, y, z);
-                                var distance = ManhattanDistance3D(center, current);
-                                if (distance <= Constants.PathRange)
-                                {
-                                    if (coord2MinDistanceFromPath.ContainsKey(current))
-                                    {
-                                        if (distance < coord2MinDistanceFromPath[current])
-                                        {
-                                            coord2MinDistanceFromPath[current] = distance;
-                                        }
-                                        else
-                                        {
-                                            //较大值抛弃
-                                        }
-                                    }
-                                    else
-                                    {
-                                        coord2MinDistanceFromPath.Add(current, distance);
-                                    }
-                                }
-                                else
-                                {
-                                    //范围外部的抛弃
-                                }
-                            }
-                        }
-                    }
-                }
-                yield return null;
-            }
-        }
-        private IReadOnlyList<Coord2Int> GenerateCoordsOnPathByAStar(Coord2Int start, Coord2Int goal, int[,] territorymap)
-        {
-            var coordOpenSet = new HashSet<Coord2Int>() { start };
-            var coord2CameFrom = new Dictionary<Coord2Int, Coord2Int>();
-            var coord2GScore = new Dictionary<Coord2Int, int>() { { start, 0 } };
-            var coord2FScore = new Dictionary<Coord2Int, int>() { { start, ManhattanDistance2D(start, goal) } };
+        //                if (y <= curHeight)
+        //                {
+        //                    blockmap[x, y, z] = entity;
+        //                }
+        //                if (factor > 0)
+        //                {
+        //                    var noiseDensity = 0.03f;
+        //                    var noise = PerlinNoise.SuperimposedOctave3D(seed + 2213, x * noiseDensity, y * noiseDensity, z * noiseDensity, 2) * 0.666f;
+        //                    noise *= heightNoiseMagnification;
+        //                    noise *= factor;
+        //                    if (noise > 0.1f)
+        //                    {
+        //                        blockmap[x, y, z] = entity;
+        //                    }
+        //                    else if (noise < -0.2f && blockmap[x, y, z] == 1)
+        //                    {
+        //                        blockmap[x, y, z] = pit;
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        yield return null;
+        //    }
+        //}
+        //private IEnumerator GenerateCoord2MinDistanceFromPath(Dictionary<Coord3Int, int> coord2MinDistanceFromPath, IReadOnlyList<Path> paths, int length, int height, int[,] heightmap)
+        //{
+        //    for (int i = 0; i < paths.Count; i++)
+        //    {
+        //        var path = paths[i];
+        //        foreach (var coord2 in path.Coords)
+        //        {
+        //            var center = new Coord3Int(coord2.x, heightmap[coord2.x, coord2.y], coord2.y);
 
-            var startTerritoryIndex = territorymap[start.x, start.y];
-            var goalTerritoryIndex = territorymap[goal.x, goal.y];
-            while (coordOpenSet.Count > 0)
-            {
-                //获得最小代价点作为当前点
-                var minFScore = int.MaxValue;
-                var current = Coord2Int.zero;
-                foreach (var item in coordOpenSet)
-                {
-                    if (coord2FScore[item] < minFScore)
-                    {
-                        current = item;
-                        minFScore = coord2FScore[item];
-                    }
-                }
+        //            //限制min,max避免越界
+        //            var minx = center.x - Constants.PathRange < 0 ? 0 : center.x - Constants.PathRange;
+        //            var miny = center.y - Constants.PathRange < 0 ? 0 : center.y - Constants.PathRange;
+        //            var minz = center.z - Constants.PathRange < 0 ? 0 : center.z - Constants.PathRange;
 
-                //如果当前为目标则直接返回
-                if (current == goal)
-                {
-                    var coords = new List<Coord2Int>();
-                    while (coord2CameFrom.ContainsKey(current))
-                    {
-                        current = coord2CameFrom[current];
-                        coords.Add(current);
-                    }
-                    coords.Reverse();
-                    return coords;
-                }
-                else
-                {
-                    coordOpenSet.Remove(current);
-                    //遍历所有邻居
-                    for (int i = -1; i < 2; i++)
-                    {
-                        for (int j = -1; j < 2; j++)
-                        {
-                            var x = current.x + i;
-                            var z = current.y + j;
-                            if (i == 0 && j == 0)
-                            {
-                                //该点是自身点不是相邻点,排除.
-                            }
-                            else if (x < 0 || x >= territorymap.GetLength(0) || z < 0 || z >= territorymap.GetLength(1))
-                            {
-                                //越界
-                            }
-                            else
-                            {
-                                var neighbor = new Coord2Int(x, z);
-                                //如果相邻点可走
-                                //这里认为起始和目标领地以及空地可走
-                                var neighborTerritoryIndex = territorymap[neighbor.x, neighbor.y];
-                                if (neighborTerritoryIndex == -1 || neighborTerritoryIndex == startTerritoryIndex || neighborTerritoryIndex == goalTerritoryIndex)
-                                {
-                                    var tentativeGScore = coord2GScore[current] + 1;
-                                    if (!coord2GScore.ContainsKey(neighbor) || tentativeGScore < coord2GScore[neighbor])
-                                    {
-                                        if (coord2CameFrom.ContainsKey(neighbor))
-                                            coord2CameFrom[neighbor] = current;
-                                        else
-                                            coord2CameFrom.Add(neighbor, current);
+        //            var maxx = center.x + Constants.PathRange < length ? center.x + Constants.PathRange : length - 1;
+        //            var maxy = center.y + Constants.PathRange < height ? center.y + Constants.PathRange : height - 1;
+        //            var maxz = center.z + Constants.PathRange < length ? center.z + Constants.PathRange : length - 1;
 
-                                        if (coord2GScore.ContainsKey(neighbor))
-                                            coord2GScore[neighbor] = tentativeGScore;
-                                        else
-                                            coord2GScore.Add(neighbor, tentativeGScore);
+        //            for (int x = minx; x <= maxx; x++)
+        //            {
+        //                for (int y = miny; y < maxy; y++)
+        //                {
+        //                    for (int z = minz; z < maxz; z++)
+        //                    {
+        //                        var current = new Coord3Int(x, y, z);
+        //                        var distance = ManhattanDistance3D(center, current);
+        //                        if (distance <= Constants.PathRange)
+        //                        {
+        //                            if (coord2MinDistanceFromPath.ContainsKey(current))
+        //                            {
+        //                                if (distance < coord2MinDistanceFromPath[current])
+        //                                {
+        //                                    coord2MinDistanceFromPath[current] = distance;
+        //                                }
+        //                                else
+        //                                {
+        //                                    //较大值抛弃
+        //                                }
+        //                            }
+        //                            else
+        //                            {
+        //                                coord2MinDistanceFromPath.Add(current, distance);
+        //                            }
+        //                        }
+        //                        else
+        //                        {
+        //                            //范围外部的抛弃
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //        yield return null;
+        //    }
+        //}
+        //private IReadOnlyList<Coord2Int> GenerateCoordsOnPathByAStar(Coord2Int start, Coord2Int goal, int[,] territorymap)
+        //{
+        //    var coordOpenSet = new HashSet<Coord2Int>() { start };
+        //    var coord2CameFrom = new Dictionary<Coord2Int, Coord2Int>();
+        //    var coord2GScore = new Dictionary<Coord2Int, int>() { { start, 0 } };
+        //    var coord2FScore = new Dictionary<Coord2Int, int>() { { start, ManhattanDistance2D(start, goal) } };
 
-                                        if (coord2FScore.ContainsKey(neighbor))
-                                            coord2FScore[neighbor] = tentativeGScore + ManhattanDistance2D(neighbor, goal);
-                                        else
-                                            coord2FScore.Add(neighbor, tentativeGScore + ManhattanDistance2D(neighbor, goal));
+        //    var startTerritoryIndex = territorymap[start.x, start.y];
+        //    var goalTerritoryIndex = territorymap[goal.x, goal.y];
+        //    while (coordOpenSet.Count > 0)
+        //    {
+        //        //获得最小代价点作为当前点
+        //        var minFScore = int.MaxValue;
+        //        var current = Coord2Int.zero;
+        //        foreach (var item in coordOpenSet)
+        //        {
+        //            if (coord2FScore[item] < minFScore)
+        //            {
+        //                current = item;
+        //                minFScore = coord2FScore[item];
+        //            }
+        //        }
 
-                                        if (!coordOpenSet.Contains(neighbor))
-                                        {
-                                            coordOpenSet.Add(neighbor);
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    //相邻位置不可移动,排除.
-                                }
+        //        //如果当前为目标则直接返回
+        //        if (current == goal)
+        //        {
+        //            var coords = new List<Coord2Int>();
+        //            while (coord2CameFrom.ContainsKey(current))
+        //            {
+        //                current = coord2CameFrom[current];
+        //                coords.Add(current);
+        //            }
+        //            coords.Reverse();
+        //            return coords;
+        //        }
+        //        else
+        //        {
+        //            coordOpenSet.Remove(current);
+        //            //遍历所有邻居
+        //            for (int i = -1; i < 2; i++)
+        //            {
+        //                for (int j = -1; j < 2; j++)
+        //                {
+        //                    var x = current.x + i;
+        //                    var z = current.y + j;
+        //                    if (i == 0 && j == 0)
+        //                    {
+        //                        //该点是自身点不是相邻点,排除.
+        //                    }
+        //                    else if (x < 0 || x >= territorymap.GetLength(0) || z < 0 || z >= territorymap.GetLength(1))
+        //                    {
+        //                        //越界
+        //                    }
+        //                    else
+        //                    {
+        //                        var neighbor = new Coord2Int(x, z);
+        //                        //如果相邻点可走
+        //                        //这里认为起始和目标领地以及空地可走
+        //                        var neighborTerritoryIndex = territorymap[neighbor.x, neighbor.y];
+        //                        if (neighborTerritoryIndex == -1 || neighborTerritoryIndex == startTerritoryIndex || neighborTerritoryIndex == goalTerritoryIndex)
+        //                        {
+        //                            var tentativeGScore = coord2GScore[current] + 1;
+        //                            if (!coord2GScore.ContainsKey(neighbor) || tentativeGScore < coord2GScore[neighbor])
+        //                            {
+        //                                if (coord2CameFrom.ContainsKey(neighbor))
+        //                                    coord2CameFrom[neighbor] = current;
+        //                                else
+        //                                    coord2CameFrom.Add(neighbor, current);
 
-                            }
-                        }
-                    }
-                }
-            }
-            throw new Exception("Open set is empty but goal was never reached!");
-        }
-        private int ManhattanDistance2D(Coord2Int start, Coord2Int goal)
-        {
-            return Mathf.Abs(start.x - goal.x) + Mathf.Abs(start.y - goal.y);
-        }
-        private int ManhattanDistance3D(Coord3Int start, Coord3Int goal)
-        {
-            return Mathf.Abs(start.x - goal.x) + Mathf.Abs(start.y - goal.y) + Mathf.Abs(start.z - goal.z);
-        }
+        //                                if (coord2GScore.ContainsKey(neighbor))
+        //                                    coord2GScore[neighbor] = tentativeGScore;
+        //                                else
+        //                                    coord2GScore.Add(neighbor, tentativeGScore);
+
+        //                                if (coord2FScore.ContainsKey(neighbor))
+        //                                    coord2FScore[neighbor] = tentativeGScore + ManhattanDistance2D(neighbor, goal);
+        //                                else
+        //                                    coord2FScore.Add(neighbor, tentativeGScore + ManhattanDistance2D(neighbor, goal));
+
+        //                                if (!coordOpenSet.Contains(neighbor))
+        //                                {
+        //                                    coordOpenSet.Add(neighbor);
+        //                                }
+        //                            }
+        //                        }
+        //                        else
+        //                        {
+        //                            //相邻位置不可移动,排除.
+        //                        }
+
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    throw new Exception("Open set is empty but goal was never reached!");
+        //}
+        //private int ManhattanDistance2D(Coord2Int start, Coord2Int goal)
+        //{
+        //    return Mathf.Abs(start.x - goal.x) + Mathf.Abs(start.y - goal.y);
+        //}
+        //private int ManhattanDistance3D(Coord3Int start, Coord3Int goal)
+        //{
+        //    return Mathf.Abs(start.x - goal.x) + Mathf.Abs(start.y - goal.y) + Mathf.Abs(start.z - goal.z);
+        //}
 
         //private IEnumerator GeneratePaths(List<Path> paths, IReadOnlyList<Territory> id2Territory, int[,] territorymap)
         //{
@@ -742,37 +762,6 @@ namespace Terrain
         //}
 
 
-        private IEnumerator<Environmentmap> FillEnvironmentalmaps(int seed, int length)
-        {
-            var environmentmap = new Environmentmap(length, length);
-            for (int x = 0; x < length; x++)
-            {
-                for (int z = 0; z < length; z++)
-                {
-                    var heightNoiseDensity = 0.007f;
-                    var heightNoise = PerlinNoise.PerlinNoise2D(seed + 1232, x * heightNoiseDensity, z * heightNoiseDensity) * 1.578f * 0.5f + 0.5f;
-                    environmentmap.heightmap[x, z] = (int)(Mathf.Lerp(Constants.MinHeight, Constants.MaxHeight, heightNoise));
 
-                    var temperatureNoiseDensity = 0.003f;
-                    var temperatureNoise = PerlinNoise.PerlinNoise2D(seed + 8674, x * temperatureNoiseDensity, z * temperatureNoiseDensity) * 1.578f;
-                    //下面两步处理是为了让噪声分布结果平均
-                    var t1 = temperatureNoise * temperatureNoise;
-                    temperatureNoise *= 1.4f - 0.4f * t1;
-
-                    temperatureNoise = temperatureNoise * 0.5f + 0.5f;
-                    environmentmap.temperaturemap[x, z] = (int)(Mathf.Lerp(Constants.MinTemperature, Constants.MaxTemperature, temperatureNoise));
-
-                    var humidityNoiseDensity = 0.003f;
-                    var humidityNoise = PerlinNoise.PerlinNoise2D(seed + 96, x * humidityNoiseDensity, z * humidityNoiseDensity) * 1.578f;
-                    var t2 = humidityNoise * humidityNoise;
-                    humidityNoise *= 1.4f - 0.4f * t2;
-
-                    humidityNoise = humidityNoise * 0.5f + 0.5f;
-                    environmentmap.humiditymap[x, z] = (int)(Mathf.Lerp(Constants.MinHumidity, Constants.MaxHumidity, humidityNoise));
-                }
-                yield return null;
-            }
-            yield return environmentmap;
-        }
     }
 }

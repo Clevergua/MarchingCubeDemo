@@ -8,24 +8,22 @@ namespace Terrain
     /// </summary>
     internal abstract class Territory
     {
-        protected int[,] structuremap;
-        protected List<Structure> id2Structure;
-        public Territory()
+        public abstract int Range
         {
-            id2Structure = new List<Structure>();
-            var length = Range * 2 + 1;
-            structuremap = new int[length, length];
-            for (int x = 0; x < structuremap.GetLength(0); x++)
+            get;
+        }
+        public int Length
+        {
+            get
             {
-                for (int z = 0; z < structuremap.GetLength(1); z++)
-                {
-                    structuremap[x, z] = -1;
-                }
+                return Range * 2 + 1;
             }
         }
-        public abstract int Range { get; }
-        public int Length { get { return Range * 2 + 1; } }
-        public Coord2Int WorldCoord { get; internal set; }
+        public Coord2Int WorldCoord
+        {
+            get;
+            internal set;
+        }
         public Coord2Int Pivot2Int
         {
             get
@@ -33,7 +31,6 @@ namespace Terrain
                 return new Coord2Int(Range, Range);
             }
         }
-        public abstract IEnumerator<Structuremap> GenerateStructuremap();
-
+        public abstract IEnumerator<Structuremap> GenerateStructuremap(Environmentmap environmentmap, int seed);
     }
 }
