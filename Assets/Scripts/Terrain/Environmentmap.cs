@@ -10,6 +10,7 @@ namespace Terrain
     {
         public int xLength;
         public int zLength;
+
         public int[,] baseHeightmap;
         public int[,] baseTemperaturemap;
         public int[,] baseHumiditymap;

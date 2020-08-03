@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Terrain
@@ -15,32 +16,29 @@ namespace Terrain
 
         private int previousRandomNum;
 
-        public IEnumerator TTT()
-        {
-            var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-            Debug.Log(seed);
+        
+        //public IEnumerator TTT()
+        //{
+        //    var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+        //    Debug.Log(seed);
+        //    var grassLand = new GrassLand();
 
-            var grassLand = new GrassLand();
+        //    IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome = new Dictionary<EnvironmentDegree, Biome>()
+        //    {
+        //        { EnvironmentDegree.LowTemperatureLowHumidity, grassLand},
+        //        { EnvironmentDegree.LowTemperatureMediumHumidity, grassLand},
+        //        { EnvironmentDegree.LowTemperatureHighHumidity, grassLand},
 
-            IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome = new Dictionary<EnvironmentDegree, Biome>()
-            {
-                { EnvironmentDegree.LowTemperatureLowHumidity, grassLand},
-                { EnvironmentDegree.LowTemperatureMediumHumidity, grassLand},
-                { EnvironmentDegree.LowTemperatureHighHumidity, grassLand},
+        //        { EnvironmentDegree.MediumTemperatureLowHumidity, grassLand},
+        //        { EnvironmentDegree.MediumTemperatureMediumHumidity, grassLand},
+        //        { EnvironmentDegree.MediumTemperatureHighHumidity, grassLand},
 
-                { EnvironmentDegree.MediumTemperatureLowHumidity, grassLand},
-                { EnvironmentDegree.MediumTemperatureMediumHumidity, grassLand},
-                { EnvironmentDegree.MediumTemperatureHighHumidity, grassLand},
-
-                { EnvironmentDegree.HighTemperatureLowHumidity, grassLand},
-                { EnvironmentDegree.HighTemperatureMediumHumidity, grassLand},
-                { EnvironmentDegree.HighTemperatureHighHumidity, grassLand},
-            };
-
-            yield return GenerateIsland(seed, 16, environmentDegree2Biome);
-        }
-
-
+        //        { EnvironmentDegree.HighTemperatureLowHumidity, grassLand},
+        //        { EnvironmentDegree.HighTemperatureMediumHumidity, grassLand},
+        //        { EnvironmentDegree.HighTemperatureHighHumidity, grassLand},
+        //    };
+        //    yield return GenerateIsland(seed, 16, environmentDegree2Biome);
+        //}
 
         internal IEnumerator<Island> GenerateIsland(int seed, int worldLength, IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome)
         {
@@ -51,7 +49,6 @@ namespace Terrain
                 currentOperation = "正在生成环境图";
                 progress = 5;
                 yield return null;
-
                 var enumerator = FillEnvironmentalmaps(seed, length, environmentDegree2Biome);
                 while (enumerator.MoveNext()) { yield return null; }
                 environmentmap = enumerator.Current;
