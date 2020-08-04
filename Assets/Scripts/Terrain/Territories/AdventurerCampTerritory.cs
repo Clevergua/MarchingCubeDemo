@@ -25,7 +25,7 @@ namespace Terrain
                 var factor = seed;
                 for (int i = 0; i < 4; i++)
                 {
-                    var index = structuremap.id2Structure.Count;
+                    var index = structuremap.ID2Structure.Count;
                     var tent = new Tent(--factor, seed);
 
                     var tentLength = tent.Coord2Block.GetLength(0);
@@ -40,7 +40,7 @@ namespace Terrain
                     {
                         for (int z = 0; z < tentWidth; z++)
                         {
-                            if (structuremap.coord2ID[ranSWCoord.x + x, ranSWCoord.y + z] != -1)
+                            if (structuremap[ranSWCoord.x + x, ranSWCoord.y + z] != -1)
                             {
                                 canCreate = false;
                             }
@@ -52,10 +52,10 @@ namespace Terrain
                         {
                             for (int z = 0; z < tentWidth; z++)
                             {
-                                structuremap.coord2ID[ranSWCoord.x + x, ranSWCoord.y + z] = index;
+                                structuremap[ranSWCoord.x + x, ranSWCoord.y + z] = index;
                             }
                         }
-                        structuremap.id2Structure.Add(tent);
+                        structuremap.ID2Structure.Add(tent);
                     }
                 }
             }
@@ -63,15 +63,15 @@ namespace Terrain
 
         private void AddStructureToMap(Structuremap structuremap, Structure structure, Coord2Int swCoord)
         {
-            var index = structuremap.id2Structure.Count;
+            var index = structuremap.ID2Structure.Count;
             for (int x = 0; x < structure.Coord2Block.GetLength(0); x++)
             {
                 for (int z = 0; z < structure.Coord2Block.GetLength(2); z++)
                 {
-                    structuremap.coord2ID[swCoord.x + x, swCoord.y + z] = index;
+                    structuremap[swCoord.x + x, swCoord.y + z] = index;
                 }
             }
-            structuremap.id2Structure.Add(structure);
+            structuremap.ID2Structure.Add(structure);
         }
 
         internal override void GeneratePathmap()
