@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Terrain
 {
@@ -16,8 +17,7 @@ namespace Terrain
             {
                 var bonfire = new Bonfire();
                 var swCoord = new Coord2Int(Pivot2Int.x - bonfire.Pivot2Int.x, Pivot2Int.y - bonfire.Pivot2Int.y);
-                PutStructureIntoMap(structuremap, bonfire, swCoord);
-               
+                AddStructureToMap(structuremap, bonfire, swCoord);
             }
 
             //尝试创建4个帐篷
@@ -61,7 +61,7 @@ namespace Terrain
             }
         }
 
-        private void PutStructureIntoMap(Structuremap structuremap, Structure structure, Coord2Int swCoord)
+        private void AddStructureToMap(Structuremap structuremap, Structure structure, Coord2Int swCoord)
         {
             var index = structuremap.id2Structure.Count;
             for (int x = 0; x < structure.Coord2Block.GetLength(0); x++)
@@ -71,7 +71,6 @@ namespace Terrain
                     structuremap.coord2ID[swCoord.x + x, swCoord.y + z] = index;
                 }
             }
-            structure.WorldCoord2Int = swCoord + ;
             structuremap.id2Structure.Add(structure);
         }
 

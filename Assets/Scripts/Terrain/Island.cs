@@ -21,7 +21,6 @@ namespace Terrain
         public bool isDone { get; private set; } = false;
 
 
-        private int previousRandomNum;
 
         internal async void Generate()
         {
@@ -47,12 +46,12 @@ namespace Terrain
 
             currentOperation = "正在生成领地内建筑图";
             {
-                var tasks = new Task[territorymap.id2Territory.Count];
-                for (int i = 0; i < territorymap.id2Territory.Count; i++)
+                var tasks = new Task[territorymap.ID2Territory.Count];
+                for (int i = 0; i < territorymap.ID2Territory.Count; i++)
                 {
                     tasks[i] = Task.Run(() =>
                     {
-                        territorymap.id2Territory[i].GenerateStructuremap(environmentmap, seed);
+                        territorymap.ID2Territory[i].GenerateStructuremap(environmentmap, seed);
                     });
                     Task.WaitAll(tasks);
                 }
@@ -100,7 +99,7 @@ namespace Terrain
             #region 绘制图
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
             var territoryType2Color = new Dictionary<Type, Color>();
-            foreach (var item in territorymap.id2Territory)
+            foreach (var item in territorymap.ID2Territory)
             {
                 var t = item.GetType();
                 if (!territoryType2Color.ContainsKey(t))
@@ -115,7 +114,7 @@ namespace Terrain
                 for (int y = 0; y < length; y++)
                 {
 
-                    var index = territorymap.coord2ID[x, y];
+                    var index = territorymap[x, y];
                     if (index == -1)
                     {
                         //if (pathmap[x, y] != -1)
@@ -130,7 +129,7 @@ namespace Terrain
                     }
                     else
                     {
-                        texture.SetPixel(x, y, territoryType2Color[territorymap.id2Territory[index].GetType()]);
+                        texture.SetPixel(x, y, territoryType2Color[territorymap.ID2Territory[index].GetType()]);
                     }
 
                 }
@@ -238,16 +237,14 @@ namespace Terrain
                     var maxTimes = 8;
                     //根据范围进行排序
                     necessaryTerritories.Sort((l, r) => { return r.Range - l.Range; });
-                    var tempSeed = seed;
                     var times = 0;
-                    while (!TrySetNecessaryTerritories(territorymap, necessaryTerritories, tempSeed))
+                    while (!TrySetNecessaryTerritories(territorymap, necessaryTerritories, seed + times))
                     {
                         times++;
                         if (times > maxTimes)
                         {
                             throw new Exception("Too many attempts when generating necessary territory");
                         }
-                        tempSeed++;
                     }
                 }
                 //填充非必要领地
@@ -255,11 +252,16 @@ namespace Terrain
                     var maxTimes = 4;
                     //根据范围进行排序
                     normalTerritories.Sort((l, r) => { return r.Range - l.Range; });
-                    foreach (var t in normalTerritories)
+                    for (int i = 0; i < normalTerritories.Count; i++)
                     {
-                        for (int i = 0; i < maxTimes; i++)
+                        var territory = normalTerritories[i];
+                        for (int j = 0; j < maxTimes; j++)
                         {
-                            if (TrySetTerritory(t, territorymap, seed + i)) { break; }
+                            var rx = Mathf.Abs(RNG.Random1(j, seed + i * 487) % territorymap.Length);
+                            var rz = Mathf.Abs(RNG.Random1(rx + j, seed + i * 511) % territorymap.Width);
+                            var centerCoord = new Coord2Int(rx, rz);
+                            var result = territorymap.TryAddTerritory(centerCoord, territory);
+                            if (result) { break; }
                         }
                     }
                 }
@@ -268,16 +270,22 @@ namespace Terrain
         }
         private bool TrySetNecessaryTerritories(Territorymap territorymap, IReadOnlyList<Territory> necessaryTerritories, int seed)
         {
+            var maxTimes = 32;
             territorymap.Reset();
-            foreach (var territory in necessaryTerritories)
+            for (int i = 0; i < necessaryTerritories.Count; i++)
             {
+                var territory = necessaryTerritories[i];
                 var times = 0;
                 while (true)
                 {
                     times++;
-                    if (times < 8)
+                    if (times < maxTimes)
                     {
-                        if (TrySetTerritory(territory, territorymap, seed)) { break; }
+                        var rx = RNG.Random1(times, seed + i);
+                        var ry = RNG.Random1(rx + times, seed + i);
+                        var centerCoord = new Coord2Int(rx, ry);
+                        var result = territorymap.TryAddTerritory(centerCoord, territory);
+                        if (result) { break; }
                     }
                     else
                     {
@@ -286,55 +294,6 @@ namespace Terrain
                 }
             }
             return true;
-        }
-        private bool TrySetTerritory(Territory territory, Territorymap territorymap, int seed)
-        {
-            var success = true;
-            var length = territorymap.coord2ID.GetLength(0);
-            var rangeCount = (length - 2 * territory.Range);
-            var rx = GetNextRandomInt(seed);
-            var ry = GetNextRandomInt(seed);
-            var cx = Math.Abs(rx % rangeCount) + territory.Range;
-            var cy = Math.Abs(ry % rangeCount) + territory.Range;
-            for (int x = cx - territory.Range; x < cx + territory.Range; x++)
-            {
-                for (int y = cy - territory.Range; y < cy + territory.Range; y++)
-                {
-                    if (territorymap.coord2ID[x, y] == -1)
-                    {
-                        //Do nothing
-                    }
-                    else
-                    {
-                        success = false;
-                    }
-                }
-            }
-            if (success)
-            {
-                var index = territorymap.id2Territory.Count;
-                territorymap.id2Territory.Add(territory);
-                territory.WorldCoord = new Coord2Int(cx, cy);
-
-                for (int x = cx - territory.Range; x < cx + territory.Range; x++)
-                {
-                    for (int y = cy - territory.Range; y < cy + territory.Range; y++)
-                    {
-                        territorymap.coord2ID[x, y] = index;
-                    }
-                }
-            }
-            else
-            {
-                //Do nothing
-            }
-            return success;
-        }
-        private int GetNextRandomInt(int seed)
-        {
-            var value = RNG.Random1(previousRandomNum, seed);
-            previousRandomNum = value;
-            return value;
         }
 
 

@@ -21,11 +21,6 @@ namespace Terrain
                 return Range * 2 + 1;
             }
         }
-        public Coord2Int WorldCoord
-        {
-            get;
-            internal set;
-        }
         public Coord2Int Pivot2Int
         {
             get

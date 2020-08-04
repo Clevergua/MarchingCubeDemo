@@ -4,8 +4,16 @@
     {
         private static readonly int X_PRIME = 16197;
         private static readonly int Y_PRIME = 31337;
-        private static readonly int Z_PRIME = 6971;
+        private static readonly int Z_PRIME = 26971;
 
+        public static int Random(int seed)
+        {
+            var value = X_PRIME;
+            value ^= X_PRIME * seed + 31337;
+            value = value * value * value * 72377;
+            value = value << 23 ^ value;
+            return value;
+        }
         public static int Random1(int x, int seed)
         {
             int value = seed;
