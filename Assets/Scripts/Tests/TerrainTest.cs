@@ -1,4 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
+using System.Threading;
+using System.Threading.Tasks;
 using Core;
 using NUnit.Framework;
 using Terrain;
@@ -9,14 +12,33 @@ namespace Tests
 {
     public class TerrainTest
     {
+        private int i;
         // A Test behaves as an ordinary method
         [Test]
         public void TerrainTestSimplePasses()
         {
-            var folderPath = System.IO.Path.Combine(Application.streamingAssetsPath, "StructureData");
-            Debug.Log(folderPath);
+            A();
+            Debug.Log("TerrainTestSimplePasses");
         }
-
+        async void A()
+        {
+            Debug.Log("TerrainTestSimplePasses1");
+            var d = Task.Delay(1000);
+            await d;
+            Debug.Log("TerrainTestSimplePasses2");
+            await B();
+            Debug.Log("TerrainTestSimplePasses3");
+        }
+        async Task B()
+        {
+            Debug.Log(Thread.CurrentThread.ManagedThreadId);
+            await Task.Run(() =>
+            {
+                Debug.Log(Thread.CurrentThread.ManagedThreadId);
+                i = 5;
+                throw new Exception("TerrainTestSimplePasses3");
+            });
+        }
 
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         // `yield return null;` to skip a frame.
@@ -32,7 +54,7 @@ namespace Tests
             {
                 for (int y = 0; y < sampleCount; y++)
                 {
-                    var value = PerlinNoise.PerlinNoise2D(Random.Range(int.MinValue, int.MaxValue), x * density, y * density) * 1.5789f;
+                    var value = PerlinNoise.PerlinNoise2D(UnityEngine.Random.Range(int.MinValue, int.MaxValue), x * density, y * density) * 1.5789f;
                     var t = (value * value);
                     value *= 1.4f - 0.4f * t;
                     if (value < -0.8f)
@@ -97,7 +119,7 @@ namespace Tests
             {
                 for (int y = 0; y < sampleCount; y++)
                 {
-                    var r = RNG.Random2(x, y, Random.Range(int.MinValue, int.MaxValue));
+                    var r = RNG.Random2(x, y, UnityEngine.Random.Range(int.MinValue, int.MaxValue));
                     var value = r % 50 + 50;
 
                     if (value < 10)
@@ -231,7 +253,7 @@ namespace Tests
                 {
                     for (int z = 0; z < sampleCount; z++)
                     {
-                        var value = PerlinNoise.PerlinNoise3D(seed, x * density, y * density, z * density) ;
+                        var value = PerlinNoise.PerlinNoise3D(seed, x * density, y * density, z * density);
                         //var t = (value * value);
                         //value *= 1.4f - 0.4f * t;
                         if (value < -0.8f)

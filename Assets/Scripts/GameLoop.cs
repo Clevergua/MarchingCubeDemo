@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class GameLoop : MonoBehaviour
 {
     private int seed;
-    TerrainGenerator terrainGen;
+    Island terrainGen;
     [SerializeField] Text text;
     [SerializeField] List<GameObject> prefabs;
     private bool hasShown = false;
@@ -17,9 +17,9 @@ public class GameLoop : MonoBehaviour
     void Start()
     {
         //Create level
-        terrainGen = new TerrainGenerator();
-
-        StartCoroutine(terrainGen.TTT());
+        terrainGen = new Island();
+        terrainGen.
+        //StartCoroutine(terrainGen.TTT());
     }
     IEnumerator Show()
     {

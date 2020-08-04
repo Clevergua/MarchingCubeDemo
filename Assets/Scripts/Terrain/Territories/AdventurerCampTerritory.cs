@@ -1,28 +1,23 @@
 ﻿using Core;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Terrain
 {
     internal class AdventurerCampTerritory : Territory
     {
         public override int Range { get { return 16; } }
-        public override IEnumerator<Structuremap> GenerateStructuremap(Environmentmap environmentmap, int seed)
+        public override void GenerateStructuremap(Environmentmap environmentmap, int seed)
         {
-            var structuremap = new Structuremap(Length, Length);
+            structuremap = new Structuremap(Length, Length);
 
             //在中心创建一个篝火
             {
                 var bonfire = new Bonfire();
                 var swCoord = new Coord2Int(Pivot2Int.x - bonfire.Pivot2Int.x, Pivot2Int.y - bonfire.Pivot2Int.y);
-                var index = structuremap.id2Structure.Count;
-                for (int x = 0; x < bonfire.Coord2Block.GetLength(0); x++)
-                {
-                    for (int z = 0; z < bonfire.Coord2Block.GetLength(2); z++)
-                    {
-                        structuremap.coord2ID[swCoord.x + x, swCoord.y + z] = index;
-                    }
-                }
-                structuremap.id2Structure.Add(bonfire);
+                PutStructureIntoMap(structuremap, bonfire, swCoord);
+               
             }
 
             //尝试创建4个帐篷
@@ -64,9 +59,83 @@ namespace Terrain
                     }
                 }
             }
-
-            yield return structuremap;
         }
 
+        private void PutStructureIntoMap(Structuremap structuremap, Structure structure, Coord2Int swCoord)
+        {
+            var index = structuremap.id2Structure.Count;
+            for (int x = 0; x < structure.Coord2Block.GetLength(0); x++)
+            {
+                for (int z = 0; z < structure.Coord2Block.GetLength(2); z++)
+                {
+                    structuremap.coord2ID[swCoord.x + x, swCoord.y + z] = index;
+                }
+            }
+            structure.WorldCoord2Int = swCoord + ;
+            structuremap.id2Structure.Add(structure);
+        }
+
+        internal override void GeneratePathmap()
+        {
+            var markedTerritories = new List<Territory>();
+            var unmarkedTerritories = new List<Territory>();
+            BossTerritory bossTerritory = null;
+            foreach (var t in id2Territory)
+            {
+                if (t is AdventurerCampTerritory)
+                {
+                    markedTerritories.Add(t);
+                }
+                else
+                {
+                    if (t is BossTerritory)
+                    {
+                        bossTerritory = t as BossTerritory;
+                    }
+                    else
+                    {
+                        unmarkedTerritories.Add(t);
+                    }
+                }
+            }
+            yield return null;
+
+            unmarkedTerritories.Add(bossTerritory);
+            while (unmarkedTerritories.Count > 0)
+            {
+                var currentMarkedTerritory = markedTerritories[markedTerritories.Count - 1];
+                var minDistance = int.MaxValue;
+                Territory destination = null;
+                var minDisUnmarkedTerritoryIndex = -1;
+                for (int i = 0; i < unmarkedTerritories.Count; i++)
+                {
+                    var unmarkedTerritory = unmarkedTerritories[i];
+                    var distance = Mathf.Abs(currentMarkedTerritory.WorldCoord.x - unmarkedTerritory.WorldCoord.x) + Mathf.Abs(currentMarkedTerritory.WorldCoord.y - unmarkedTerritory.WorldCoord.y);
+                    if (distance < minDistance)
+                    {
+                        destination = unmarkedTerritory;
+                        minDisUnmarkedTerritoryIndex = i;
+                        minDistance = distance;
+                    }
+                }
+
+                minDistance = int.MaxValue;
+                Territory departure = null;
+                foreach (var markedTerritory in markedTerritories)
+                {
+                    var distance = Mathf.Abs(markedTerritory.WorldCoord.x - destination.WorldCoord.x) + Mathf.Abs(markedTerritory.WorldCoord.y - destination.WorldCoord.y);
+                    if (distance < minDistance)
+                    {
+                        departure = markedTerritory;
+                        minDistance = distance;
+                    }
+                }
+
+                markedTerritories.Add(destination);
+                unmarkedTerritories.RemoveAt(minDisUnmarkedTerritoryIndex);
+                var coords = GenerateCoordsOnPathByAStar(departure.WorldCoord, destination.WorldCoord, territorymap);
+                paths.Add(new Path(departure, destination, coords));
+                yield return null;
+            }
+        }
     }
-}

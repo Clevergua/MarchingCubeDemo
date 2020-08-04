@@ -56,7 +56,6 @@ namespace Terrain
                 return new Coord3Int(coord2Block.GetLength(0) / 2, coord2Block.GetLength(1) / 2, coord2Block.GetLength(2) / 2);
             }
         }
-
         private void RotateData(Direction direction)
         {
             switch (Mathf.Abs((int)direction - (int)this.direction))
