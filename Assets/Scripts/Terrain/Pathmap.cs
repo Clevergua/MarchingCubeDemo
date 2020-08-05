@@ -4,20 +4,25 @@ namespace Terrain
 {
     internal class Pathmap
     {
-        private List<Path> id2Path;
-        private int[,] coord2ID;
+        private int length;
+        private int width;
+        private PathBlock[,] coord2PathBlock;
 
-        public Pathmap(int xLength, int zLength)
+        public int Length { get { return length; } }
+        public int Width { get { return width; } }
+        public PathBlock this[int x, int z]
         {
-            id2Path = new List<Path>();
-            int[,] coord2ID = new int[xLength, zLength];
-            for (int x = 0; x < xLength; x++)
+            get
             {
-                for (int z = 0; z < zLength; z++)
-                {
-                    coord2ID[x, z] = -1;
-                }
+                return coord2PathBlock[x, z];
             }
+        }
+
+        public Pathmap(int length, int width)
+        {
+            this.length = length;
+            this.width = width;
+            coord2PathBlock = new PathBlock[length, width];
         }
     }
 }

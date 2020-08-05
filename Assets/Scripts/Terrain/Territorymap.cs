@@ -1,6 +1,4 @@
 ﻿using Core;
-using System;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Terrain
@@ -89,7 +87,7 @@ namespace Terrain
             {
                 return false;
             }
-            
+
             var index = id2Territory.Count;
             id2Territory.Add(territory);
             territory2Coord.Add(territory, centerCoord);

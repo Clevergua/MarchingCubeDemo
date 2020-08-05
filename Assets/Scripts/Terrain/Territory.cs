@@ -35,13 +35,15 @@ namespace Terrain
         /// <summary>
         /// 生成局部的道路图
         /// </summary>
-        internal virtual bool[,] GeneratePathmap()
+        internal virtual Task<Pathmap> GeneratePathmap()
         {
-            var pathmap = new bool[structuremap.Length, structuremap.Width];
-            for (int x = 0; x < pathmap.GetLength(0); x++)
+            var pathmap = new Pathmap(structuremap.Length, structuremap.Width);
+            for (int x = 0; x < pathmap.Length; x++)
             {
-                for (int z = 0; z < pathmap.GetLength(1); z++)
+                for (int z = 0; z < pathmap.Width; z++)
                 {
+
+
                 }
             }
         }

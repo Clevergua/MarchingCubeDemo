@@ -4,6 +4,10 @@ using System.Collections.Generic;
 
 namespace Terrain
 {
+    /// <summary>
+    /// 建筑图
+    /// 用于每一个领地存储自己的建筑信息
+    /// </summary>
     internal class Structuremap
     {
         private int length;

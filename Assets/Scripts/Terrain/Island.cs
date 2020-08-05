@@ -66,10 +66,11 @@ namespace Terrain
                 foreach (var territory in territorymap.ID2Territory)
                 {
                     var swCoord = territorymap.Territory2Coord[territory] - territory.Pivot2Int;
-                    for (int x = 0; x < swCoord.x; x++)
+                    for (int x = swCoord.x; x < swCoord.x + territory.Length; x++)
                     {
-                        for (int z = 0; z < swCoord.y; z++)
+                        for (int z = swCoord.x; z < swCoord.y + territory.Length; z++)
                         {
+
                             var territoryPathmap = Task.Run(() =>
                             {
                                 territory.GeneratePathmap();
