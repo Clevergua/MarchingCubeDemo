@@ -1,7 +1,6 @@
 ﻿using Core;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Terrain
@@ -12,12 +11,12 @@ namespace Terrain
         public override void GenerateStructuremap(Environmentmap environmentmap, int seed)
         {
             structuremap = new Structuremap(Length, Length);
-
             //在中心创建一个篝火
             {
                 var bonfire = new Bonfire();
                 var swCoord = new Coord2Int(Pivot2Int.x - bonfire.Pivot2Int.x, Pivot2Int.y - bonfire.Pivot2Int.y);
-                AddStructureToMap(structuremap, bonfire, swCoord);
+                var result = structuremap.TryAddStructure(bonfire, swCoord);
+                if (!result) throw new Exception($"建筑篝火预设体过大");
             }
 
             //尝试创建4个帐篷
@@ -25,53 +24,15 @@ namespace Terrain
                 var factor = seed;
                 for (int i = 0; i < 4; i++)
                 {
-                    var index = structuremap.ID2Structure.Count;
-                    var tent = new Tent(--factor, seed);
-
-                    var tentLength = tent.Coord2Block.GetLength(0);
-                    var tentWidth = tent.Coord2Block.GetLength(2);
-                    var rx = RNG.Random1(--factor, seed) % (Length - tentLength);
-                    var rz = RNG.Random1(--factor, seed) % (Length - tentWidth);
+                    var tent = new Tent(factor++, seed);
+                    var rx = RNG.Random1(factor++, seed) % (Length - tent.Length);
+                    var rz = RNG.Random1(factor++, seed) % (Length - tent.Width);
                     rx = rx > 0 ? rx : -rx;
                     rz = rz > 0 ? rz : -rz;
-                    var ranSWCoord = new Coord2Int(rx, rz);
-                    var canCreate = true;
-                    for (int x = 0; x < tentLength; x++)
-                    {
-                        for (int z = 0; z < tentWidth; z++)
-                        {
-                            if (structuremap[ranSWCoord.x + x, ranSWCoord.y + z] != -1)
-                            {
-                                canCreate = false;
-                            }
-                        }
-                    }
-                    if (canCreate)
-                    {
-                        for (int x = 0; x < tentLength; x++)
-                        {
-                            for (int z = 0; z < tentWidth; z++)
-                            {
-                                structuremap[ranSWCoord.x + x, ranSWCoord.y + z] = index;
-                            }
-                        }
-                        structuremap.ID2Structure.Add(tent);
-                    }
+                    var swCoord = new Coord2Int(rx, rz);
+                    structuremap.TryAddStructure(tent, swCoord);
                 }
             }
-        }
-
-        private void AddStructureToMap(Structuremap structuremap, Structure structure, Coord2Int swCoord)
-        {
-            var index = structuremap.ID2Structure.Count;
-            for (int x = 0; x < structure.Coord2Block.GetLength(0); x++)
-            {
-                for (int z = 0; z < structure.Coord2Block.GetLength(2); z++)
-                {
-                    structuremap[swCoord.x + x, swCoord.y + z] = index;
-                }
-            }
-            structuremap.ID2Structure.Add(structure);
         }
 
         internal override void GeneratePathmap()
@@ -138,3 +99,4 @@ namespace Terrain
             }
         }
     }
+}

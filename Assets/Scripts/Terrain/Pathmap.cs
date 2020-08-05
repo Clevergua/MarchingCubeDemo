@@ -4,8 +4,8 @@ namespace Terrain
 {
     internal class Pathmap
     {
-        public List<Path> id2Path;
-        public int[,] coord2ID;
+        private List<Path> id2Path;
+        private int[,] coord2ID;
 
         public Pathmap(int xLength, int zLength)
         {

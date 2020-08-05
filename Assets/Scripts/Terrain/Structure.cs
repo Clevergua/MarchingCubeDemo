@@ -14,11 +14,32 @@ namespace Terrain
         /// <summary>
         /// 建筑数据
         /// </summary>
-        public byte[,,] Coord2Block
+        public byte this[int x, int y, int z]
         {
             get
             {
-                return coord2Block;
+                return coord2Block[x, y, z];
+            }
+        }
+        public int Length
+        {
+            get
+            {
+                return coord2Block.GetLength(0);
+            }
+        }
+        public int Width
+        {
+            get
+            {
+                return coord2Block.GetLength(1);
+            }
+        }
+        public int Height
+        {
+            get
+            {
+                return coord2Block.GetLength(2);
             }
         }
         /// <summary>

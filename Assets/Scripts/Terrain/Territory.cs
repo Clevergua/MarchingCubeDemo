@@ -10,10 +10,7 @@ namespace Terrain
     internal abstract class Territory
     {
         public Structuremap structuremap { get; protected set; }
-        public abstract int Range
-        {
-            get;
-        }
+        public abstract int Range { get; }
         public int Length
         {
             get
@@ -38,6 +35,15 @@ namespace Terrain
         /// <summary>
         /// 生成局部的道路图
         /// </summary>
-        internal abstract void GeneratePathmap();
+        internal virtual bool[,] GeneratePathmap()
+        {
+            var pathmap = new bool[structuremap.Length, structuremap.Width];
+            for (int x = 0; x < pathmap.GetLength(0); x++)
+            {
+                for (int z = 0; z < pathmap.GetLength(1); z++)
+                {
+                }
+            }
+        }
     }
 }

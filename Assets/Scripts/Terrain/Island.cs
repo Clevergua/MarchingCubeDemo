@@ -62,18 +62,23 @@ namespace Terrain
             currentOperation = "正在生成道路图";
             {
                 pathmap = new Pathmap(length, length);
-                //生成领地内道路图
-                foreach (var t in territorymap.id2Territory)
+                //道路连接建筑
+                foreach (var territory in territorymap.ID2Territory)
                 {
-                    var swCoord = t.WorldCoord - t.Pivot2Int;
+                    var swCoord = territorymap.Territory2Coord[territory] - territory.Pivot2Int;
                     for (int x = 0; x < swCoord.x; x++)
                     {
                         for (int z = 0; z < swCoord.y; z++)
                         {
-                            t.GeneratePathmap();
+                            var territoryPathmap = Task.Run(() =>
+                            {
+                                territory.GeneratePathmap();
+                            });
                         }
                     }
                 }
+                //道路连接领地
+
             }
             progress = 30;
 
