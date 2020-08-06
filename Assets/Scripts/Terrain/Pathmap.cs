@@ -6,15 +6,19 @@ namespace Terrain
     {
         private int length;
         private int width;
-        private PathBlock[,] coord2PathBlock;
+        private bool[,] map;
 
         public int Length { get { return length; } }
         public int Width { get { return width; } }
-        public PathBlock this[int x, int z]
+        public bool this[int x, int z]
         {
+            internal set
+            {
+                map[x, z] = value;
+            }
             get
             {
-                return coord2PathBlock[x, z];
+                return map[x, z];
             }
         }
 
@@ -22,7 +26,7 @@ namespace Terrain
         {
             this.length = length;
             this.width = width;
-            coord2PathBlock = new PathBlock[length, width];
+            map = new bool[length, width];
         }
     }
 }

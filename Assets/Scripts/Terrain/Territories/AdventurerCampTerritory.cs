@@ -35,68 +35,68 @@ namespace Terrain
             }
         }
 
-        internal override void GeneratePathmap()
-        {
-            var markedTerritories = new List<Territory>();
-            var unmarkedTerritories = new List<Territory>();
-            BossTerritory bossTerritory = null;
-            foreach (var t in id2Territory)
-            {
-                if (t is AdventurerCampTerritory)
-                {
-                    markedTerritories.Add(t);
-                }
-                else
-                {
-                    if (t is BossTerritory)
-                    {
-                        bossTerritory = t as BossTerritory;
-                    }
-                    else
-                    {
-                        unmarkedTerritories.Add(t);
-                    }
-                }
-            }
-            yield return null;
+        //internal override void GeneratePathmap()
+        //{
+        //    var markedTerritories = new List<Territory>();
+        //    var unmarkedTerritories = new List<Territory>();
+        //    BossTerritory bossTerritory = null;
+        //    foreach (var t in id2Territory)
+        //    {
+        //        if (t is AdventurerCampTerritory)
+        //        {
+        //            markedTerritories.Add(t);
+        //        }
+        //        else
+        //        {
+        //            if (t is BossTerritory)
+        //            {
+        //                bossTerritory = t as BossTerritory;
+        //            }
+        //            else
+        //            {
+        //                unmarkedTerritories.Add(t);
+        //            }
+        //        }
+        //    }
+        //    yield return null;
 
-            unmarkedTerritories.Add(bossTerritory);
-            while (unmarkedTerritories.Count > 0)
-            {
-                var currentMarkedTerritory = markedTerritories[markedTerritories.Count - 1];
-                var minDistance = int.MaxValue;
-                Territory destination = null;
-                var minDisUnmarkedTerritoryIndex = -1;
-                for (int i = 0; i < unmarkedTerritories.Count; i++)
-                {
-                    var unmarkedTerritory = unmarkedTerritories[i];
-                    var distance = Mathf.Abs(currentMarkedTerritory.WorldCoord.x - unmarkedTerritory.WorldCoord.x) + Mathf.Abs(currentMarkedTerritory.WorldCoord.y - unmarkedTerritory.WorldCoord.y);
-                    if (distance < minDistance)
-                    {
-                        destination = unmarkedTerritory;
-                        minDisUnmarkedTerritoryIndex = i;
-                        minDistance = distance;
-                    }
-                }
+        //    unmarkedTerritories.Add(bossTerritory);
+        //    while (unmarkedTerritories.Count > 0)
+        //    {
+        //        var currentMarkedTerritory = markedTerritories[markedTerritories.Count - 1];
+        //        var minDistance = int.MaxValue;
+        //        Territory destination = null;
+        //        var minDisUnmarkedTerritoryIndex = -1;
+        //        for (int i = 0; i < unmarkedTerritories.Count; i++)
+        //        {
+        //            var unmarkedTerritory = unmarkedTerritories[i];
+        //            var distance = Mathf.Abs(currentMarkedTerritory.WorldCoord.x - unmarkedTerritory.WorldCoord.x) + Mathf.Abs(currentMarkedTerritory.WorldCoord.y - unmarkedTerritory.WorldCoord.y);
+        //            if (distance < minDistance)
+        //            {
+        //                destination = unmarkedTerritory;
+        //                minDisUnmarkedTerritoryIndex = i;
+        //                minDistance = distance;
+        //            }
+        //        }
 
-                minDistance = int.MaxValue;
-                Territory departure = null;
-                foreach (var markedTerritory in markedTerritories)
-                {
-                    var distance = Mathf.Abs(markedTerritory.WorldCoord.x - destination.WorldCoord.x) + Mathf.Abs(markedTerritory.WorldCoord.y - destination.WorldCoord.y);
-                    if (distance < minDistance)
-                    {
-                        departure = markedTerritory;
-                        minDistance = distance;
-                    }
-                }
+        //        minDistance = int.MaxValue;
+        //        Territory departure = null;
+        //        foreach (var markedTerritory in markedTerritories)
+        //        {
+        //            var distance = Mathf.Abs(markedTerritory.WorldCoord.x - destination.WorldCoord.x) + Mathf.Abs(markedTerritory.WorldCoord.y - destination.WorldCoord.y);
+        //            if (distance < minDistance)
+        //            {
+        //                departure = markedTerritory;
+        //                minDistance = distance;
+        //            }
+        //        }
 
-                markedTerritories.Add(destination);
-                unmarkedTerritories.RemoveAt(minDisUnmarkedTerritoryIndex);
-                var coords = GenerateCoordsOnPathByAStar(departure.WorldCoord, destination.WorldCoord, territorymap);
-                paths.Add(new Path(departure, destination, coords));
-                yield return null;
-            }
-        }
+        //        markedTerritories.Add(destination);
+        //        unmarkedTerritories.RemoveAt(minDisUnmarkedTerritoryIndex);
+        //        var coords = GenerateCoordsOnPathByAStar(departure.WorldCoord, destination.WorldCoord, territorymap);
+        //        paths.Add(new Path(departure, destination, coords));
+        //        yield return null;
+        //    }
+        //}
     }
 }

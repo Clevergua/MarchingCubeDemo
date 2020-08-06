@@ -14,6 +14,14 @@ namespace Core
         public static Coord2Int down = new Coord2Int(0, -1);
         public static Coord2Int one = new Coord2Int(1, 1);
 
+        public static int ManhattanDistance(Coord2Int coord1, Coord2Int coord2)
+        {
+            var sx = coord1.x - coord2.x;
+            sx = sx > 0 ? sx : -sx;
+            var sy = coord1.y - coord2.y;
+            sy = sy > 0 ? sy : -sy;
+            return sx + sy;
+        }
         public Coord2Int(int x, int y)
         {
             this.x = x;
