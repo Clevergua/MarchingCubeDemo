@@ -232,24 +232,23 @@ namespace Terrain
 
         private void Connect2TerritoriesWithPath(Territory territory1, Territory territory2, Pathmap pathmap, Territorymap territorymap)
         {
-            var s1 = GetStructureClosest2Target(territory1, territorymap.Territory2Coord[territory2], territorymap);
-            var s2 = GetStructureClosest2Target(territory2, territorymap.Territory2Coord[territory1], territorymap);
+            var structure1 = GetStructureClosed2Target(territory1, territorymap.Territory2Coord[territory2], territorymap);
+            var structure2 = GetStructureClosed2Target(territory2, territorymap.Territory2Coord[territory1], territorymap);
 
         }
 
-        private Coord2Int GetStartPoint(Territory territory, Coord2Int target, Territorymap territorymap)
+        private Structure GetStructureClosed2Target(Territory territory, Coord2Int target, Territorymap territorymap)
         {
             if (territory.structuremap.ID2Structure.Count > 0)
             {
                 Structure result = null;
-                
                 var minDistance = int.MaxValue;
                 for (int i = 0; i < territory.structuremap.ID2Structure.Count; i++)
                 {
                     var structure = territory.structuremap.ID2Structure[i];
                     var localStructurePos = territory.structuremap.Structure2Coord[structure];
-                    var structureWorldPos = localStructurePos + territorymap.Territory2Coord[territory] - new Coord2Int(territory.Range, territory.Range);
-                    var distance = Coord2Int.ManhattanDistance(structureWorldPos, target);
+                    var worldPos = localStructurePos + territorymap.Territory2Coord[territory] - new Coord2Int(territory.Range, territory.Range);
+                    var distance = Coord2Int.ManhattanDistance(worldPos, target);
                     if (distance < minDistance)
                     {
                         result = structure;
@@ -259,7 +258,7 @@ namespace Terrain
             }
             else
             {
-                return territorymap.Territory2Coord[territory];
+                return null;
             }
         }
 
