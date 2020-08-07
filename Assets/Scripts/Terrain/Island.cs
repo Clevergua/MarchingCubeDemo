@@ -1,9 +1,9 @@
 ﻿using Core;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Terrain
 {
@@ -63,13 +63,24 @@ namespace Terrain
             currentOperation = "正在生成道路图";
             {
                 pathmap = new Pathmap(length, length);
-                //在所有领地内生成建筑
+                //在所有领地内生成建筑的道路图
                 {
+                    var tasks = new List<Task<Pathmap>>();
+                    var swCoords = new List<Coord2Int>();
                     foreach (var territory in territorymap.ID2Territory)
                     {
-                        var territoryPathmap = territory.GeneratePathmap();
-                        var swCoord = territorymap.Territory2Coord[territory] - territory.Pivot2Int;
+                        var function = new Func<Pathmap>(territory.GeneratePathmap);
+                        var swCoord = territorymap.Territory2CenterCoord[territory] - territory.Pivot2Int;
+                        tasks.Add(Task.Run(function));
+                        swCoords.Add(swCoord);
 
+                    }
+                    Task.WaitAll(tasks.ToArray());
+                    for (int i = 0; i < tasks.Count; i++)
+                    {
+                        var task = tasks[i];
+                        var swCoord = swCoords[i];
+                        var territoryPathmap = task.Result;
                         for (int x = 0; x < territoryPathmap.Length; x++)
                         {
                             for (int z = 0; z < territoryPathmap.Width; z++)
@@ -95,8 +106,8 @@ namespace Terrain
                         var index = -1;
                         for (int i = 0; i < uncalculatedTerritories.Count; i++)
                         {
-                            var c1 = territorymap.Territory2Coord[current];
-                            var c2 = territorymap.Territory2Coord[uncalculatedTerritories[i]];
+                            var c1 = territorymap.Territory2CenterCoord[current];
+                            var c2 = territorymap.Territory2CenterCoord[uncalculatedTerritories[i]];
                             var manhattanDistance = Coord2Int.ManhattanDistance(c1, c2);
                             if (manhattanDistance < minDistance)
                             {
@@ -106,7 +117,11 @@ namespace Terrain
                         }
                         var target = uncalculatedTerritories[index];
                         //连接两个领地
-                        Connect2TerritoriesWithPath(current, target, pathmap, territorymap);
+                        var coords = Connect2TerritoriesWithPath(current, target, pathmap, territorymap);
+                        foreach (var coord in coords)
+                        {
+                            pathmap[coord.x, coord.y] = true;
+                        }
                     }
                 }
                 progress = 30;
@@ -230,35 +245,183 @@ namespace Terrain
             }
         }
 
-        private void Connect2TerritoriesWithPath(Territory territory1, Territory territory2, Pathmap pathmap, Territorymap territorymap)
+        private IReadOnlyList<Coord2Int> Connect2TerritoriesWithPath(Territory territory1, Territory territory2, Pathmap pathmap, Territorymap territorymap)
         {
-            var structure1 = GetStructureClosed2Target(territory1, territorymap.Territory2Coord[territory2], territorymap);
-            var structure2 = GetStructureClosed2Target(territory2, territorymap.Territory2Coord[territory1], territorymap);
+            var id1 = GetStructureIDClosed2Target(territory1, territorymap.Territory2CenterCoord[territory2], territorymap);
+            var id2 = GetStructureIDClosed2Target(territory2, territorymap.Territory2CenterCoord[territory1], territorymap);
+            var structure1 = id1 == -1 ? null : territory1.structuremap.ID2Structure[id1];
+            var structure2 = id2 == -1 ? null : territory2.structuremap.ID2Structure[id2];
+            //使用A*算法生成路径图
+            {
+                Coord2Int start = Coord2Int.zero;
+                if (structure1 == null)
+                {
+                    start = territorymap.Territory2CenterCoord[territory1];
+                }
+                else
+                {
+                    var territorySWCoord = territorymap.Territory2CenterCoord[territory1] - territory1.Pivot2Int;
+                    var structureCenterLocalCoord = territory1.structuremap.Structure2SWCoord[structure1] + structure1.Pivot2Int;
+                    start = territorySWCoord + structureCenterLocalCoord;
+                }
+                Coord2Int goal = Coord2Int.zero;
+                if (structure2 == null)
+                {
+                    goal = territorymap.Territory2CenterCoord[territory2];
+                }
+                else
+                {
+                    var territorySWCoord = territorymap.Territory2CenterCoord[territory2] - territory2.Pivot2Int;
+                    var structureCenterLocalCoord = territory2.structuremap.Structure2SWCoord[structure2] + structure2.Pivot2Int;
+                    goal = territorySWCoord + structureCenterLocalCoord;
+                }
 
+                var coordOpenSet = new HashSet<Coord2Int>() { start };
+                var coord2CameFrom = new Dictionary<Coord2Int, Coord2Int>();
+                var coord2GScore = new Dictionary<Coord2Int, int>() { { start, 0 } };
+                var coord2FScore = new Dictionary<Coord2Int, int>() { { start, Coord2Int.ManhattanDistance(start, goal) } };
+
+                while (coordOpenSet.Count > 0)
+                {
+                    //获得最小代价点作为当前点
+                    var minFScore = int.MaxValue;
+                    var current = Coord2Int.zero;
+                    foreach (var item in coordOpenSet)
+                    {
+                        if (coord2FScore[item] < minFScore)
+                        {
+                            current = item;
+                            minFScore = coord2FScore[item];
+                        }
+                    }
+                    //如果当前为目标则直接返回
+                    if (current == goal)
+                    {
+                        var coords = new List<Coord2Int>();
+                        while (coord2CameFrom.ContainsKey(current))
+                        {
+                            current = coord2CameFrom[current];
+                            coords.Add(current);
+                        }
+                        coords.Reverse();
+                        return coords;
+                    }
+                    else
+                    {
+                        coordOpenSet.Remove(current);
+                        //遍历所有邻居
+                        for (int i = -1; i < 2; i++)
+                        {
+                            for (int j = -1; j < 2; j++)
+                            {
+                                var x = current.x + i;
+                                var z = current.y + j;
+                                if (i == 0 && j == 0)
+                                {
+                                    //该点是自身点不是相邻点,排除.
+                                }
+                                else if (x < 0 || x >= pathmap.Length || z < 0 || z >= pathmap.Width)
+                                {
+                                    //越界
+                                }
+                                else
+                                {
+                                    var neighbor = new Coord2Int(x, z);
+                                    var movable = false;
+
+                                    //如果相邻点可走
+                                    //这里认为起始和目标领地以及空地可走
+                                    if (territorymap[x, z] == -1)
+                                    {
+                                        //可走
+                                    }
+                                    else
+                                    {
+                                        var currentTerritory = territorymap.ID2Territory[territorymap[x, z]];
+                                        var localCoord = neighbor - (territorymap.Territory2CenterCoord[currentTerritory] - currentTerritory.Pivot2Int);
+                                        var currenStructureID = currentTerritory.structuremap[localCoord.x, localCoord.y];
+                                        //此处无建筑可以走
+                                        if (currenStructureID == -1)
+                                        {
+                                            //可走
+                                            movable = true;
+                                        }
+                                        else
+                                        {
+                                            //除了是出发点建筑或终点建筑的情况外不可以走
+                                            if ((currentTerritory == territory1 && currenStructureID == id1) || (currentTerritory == territory2 && currenStructureID == id2))
+                                            {
+                                                //可走
+                                                movable = true;
+                                            }
+                                            else
+                                            {
+                                                //不可走
+                                            }
+                                        }
+                                    }
+                                    //此处可以走执行操作
+                                    if (movable)
+                                    {
+                                        var tentativeGScore = coord2GScore[current] + 1;
+                                        if (!coord2GScore.ContainsKey(neighbor) || tentativeGScore < coord2GScore[neighbor])
+                                        {
+                                            if (coord2CameFrom.ContainsKey(neighbor))
+                                                coord2CameFrom[neighbor] = current;
+                                            else
+                                                coord2CameFrom.Add(neighbor, current);
+
+                                            if (coord2GScore.ContainsKey(neighbor))
+                                                coord2GScore[neighbor] = tentativeGScore;
+                                            else
+                                                coord2GScore.Add(neighbor, tentativeGScore);
+
+                                            if (coord2FScore.ContainsKey(neighbor))
+                                                coord2FScore[neighbor] = tentativeGScore + Coord2Int.ManhattanDistance(neighbor, goal);
+                                            else
+                                                coord2FScore.Add(neighbor, tentativeGScore + Coord2Int.ManhattanDistance(neighbor, goal));
+
+                                            if (!coordOpenSet.Contains(neighbor))
+                                            {
+                                                coordOpenSet.Add(neighbor);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //相邻位置不可移动,排除.
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                throw new Exception("Open set is empty but goal was never reached!");
+            }
         }
-
-        private Structure GetStructureClosed2Target(Territory territory, Coord2Int target, Territorymap territorymap)
+        //获得距离目标最近的建筑ID,如果没有择返回-1
+        private int GetStructureIDClosed2Target(Territory territory, Coord2Int target, Territorymap territorymap)
         {
             if (territory.structuremap.ID2Structure.Count > 0)
             {
-                Structure result = null;
+                int result = -1;
                 var minDistance = int.MaxValue;
                 for (int i = 0; i < territory.structuremap.ID2Structure.Count; i++)
                 {
                     var structure = territory.structuremap.ID2Structure[i];
-                    var localStructurePos = territory.structuremap.Structure2Coord[structure];
-                    var worldPos = localStructurePos + territorymap.Territory2Coord[territory] - new Coord2Int(territory.Range, territory.Range);
+                    var localStructureSWCoord = territory.structuremap.Structure2SWCoord[structure];
+                    var worldPos = (localStructureSWCoord + structure.Pivot2Int) + (territorymap.Territory2CenterCoord[territory] - new Coord2Int(territory.Range, territory.Range));
                     var distance = Coord2Int.ManhattanDistance(worldPos, target);
                     if (distance < minDistance)
                     {
-                        result = structure;
+                        result = i;
                     }
                 }
                 return result;
             }
             else
             {
-                return null;
+                return -1;
             }
         }
 

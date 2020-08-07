@@ -17,8 +17,7 @@ public class GameLoop : MonoBehaviour
     void Start()
     {
         //Create level
-        terrainGen = new Island();
-        terrainGen.
+        //terrainGen = new Island();
         //StartCoroutine(terrainGen.TTT());
     }
     IEnumerator Show()

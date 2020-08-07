@@ -52,8 +52,8 @@ namespace Terrain
                 var index = -1;
                 for (int i = 0; i < uncalculatedStructures.Count; i++)
                 {
-                    var c1 = structuremap.Structure2Coord[current];
-                    var c2 = structuremap.Structure2Coord[uncalculatedStructures[i]];
+                    var c1 = structuremap.Structure2SWCoord[current] + current.Pivot2Int;
+                    var c2 = structuremap.Structure2SWCoord[uncalculatedStructures[i]] + uncalculatedStructures[i].Pivot2Int;
                     var manhattanDistance = Coord2Int.ManhattanDistance(c1, c2);
                     if (manhattanDistance < minDistance)
                     {
@@ -63,7 +63,7 @@ namespace Terrain
                 }
                 var target = uncalculatedStructures[index];
                 //通过A*生成到目标点的路径
-                var coords = GenerateCoordsOnPathByAStar(structuremap.Structure2Coord[current], structuremap.Structure2Coord[target], structuremap);
+                var coords = GenerateCoordsOnPathByAStar(structuremap.Structure2SWCoord[current] + current.Pivot2Int, structuremap.Structure2SWCoord[target] + target.Pivot2Int, structuremap);
                 foreach (var c in coords)
                 {
                     if (!map[c.x, c.y] && structuremap[c.x, c.y] == 0)
@@ -96,7 +96,6 @@ namespace Terrain
                         minFScore = coord2FScore[item];
                     }
                 }
-
                 //如果当前为目标则直接返回
                 if (current == goal)
                 {
@@ -163,7 +162,6 @@ namespace Terrain
                                 {
                                     //相邻位置不可移动,排除.
                                 }
-
                             }
                         }
                     }
@@ -171,6 +169,6 @@ namespace Terrain
             }
             throw new Exception("Open set is empty but goal was never reached!");
         }
-
+    
     }
 }

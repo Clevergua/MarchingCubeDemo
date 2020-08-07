@@ -48,26 +48,26 @@ namespace Terrain
                             var coord = new Coord3Int(x, y, z);
                             var oak = new Oak(coord, seed);
                             var startPoint = coord - new Coord3Int(oak.Pivot2Int.x, 0, oak.Pivot2Int.y);
-                            if (startPoint.x < 0 || startPoint.x + oak.Coord2Block.GetLength(0) > blockmap.GetLength(0) ||
-                                startPoint.y < 0 || startPoint.y + oak.Coord2Block.GetLength(1) > blockmap.GetLength(1) ||
-                                startPoint.z < 0 || startPoint.z + oak.Coord2Block.GetLength(2) > blockmap.GetLength(2))
+                            if (startPoint.x < 0 || startPoint.x + oak.Length > blockmap.GetLength(0) ||
+                                startPoint.y < 0 || startPoint.y + oak.Width > blockmap.GetLength(1) ||
+                                startPoint.z < 0 || startPoint.z + oak.Height > blockmap.GetLength(2))
                             {
                                 continue;
                             }
                             else
                             {
-                                for (int lx = 0; lx < oak.Coord2Block.GetLength(0); lx++)
+                                for (int lx = 0; lx < oak.Length; lx++)
                                 {
-                                    for (int ly = 0; ly < oak.Coord2Block.GetLength(1); ly++)
+                                    for (int ly = 0; ly < oak.Width; ly++)
                                     {
-                                        for (int lz = 0; lz < oak.Coord2Block.GetLength(2); lz++)
+                                        for (int lz = 0; lz < oak.Height; lz++)
                                         {
                                             var wx = startPoint.x + lx;
                                             var wy = startPoint.y + ly;
                                             var wz = startPoint.z + lz;
-                                            if (oak.Coord2Block[lx, ly, lz] != (byte)BlockType.Air && blockmap[wx, wy, wz] == (byte)BlockType.Air)
+                                            if (oak[lx, ly, lz] != (byte)BlockType.Air && blockmap[wx, wy, wz] == (byte)BlockType.Air)
                                             {
-                                                blockmap[wx, wy, wz] = oak.Coord2Block[lx, ly, lz];
+                                                blockmap[wx, wy, wz] = oak[lx, ly, lz];
                                             }
                                         }
                                     }

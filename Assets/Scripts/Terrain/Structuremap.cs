@@ -73,12 +73,10 @@ namespace Terrain
             structure2SWCoord.Add(structure, swCoord);
             return true;
         }
-
         private bool InRange(int x, int z)
         {
             return x <= Length && z < Width && x >= 0 && z >= 0;
         }
-
         public IReadOnlyList<Structure> ID2Structure
         {
             get
@@ -86,7 +84,7 @@ namespace Terrain
                 return id2Structure;
             }
         }
-        public IReadOnlyDictionary<Structure, Coord2Int> Structure2Coord
+        public IReadOnlyDictionary<Structure, Coord2Int> Structure2SWCoord
         {
             get
             {

@@ -1,5 +1,6 @@
 ﻿using Core;
 using System.Collections.Generic;
+using UnityEngine.SocialPlatforms;
 
 namespace Terrain
 {
@@ -9,7 +10,7 @@ namespace Terrain
         private int width;
         private int[,] coord2ID;
         private List<Territory> id2Territory;
-        private Dictionary<Territory, Coord2Int> territory2Coord;
+        private Dictionary<Territory, Coord2Int> territory2CenterCoord;
 
         public int Length
         {
@@ -33,11 +34,11 @@ namespace Terrain
                 return id2Territory;
             }
         }
-        public IReadOnlyDictionary<Territory, Coord2Int> Territory2Coord
+        public IReadOnlyDictionary<Territory, Coord2Int> Territory2CenterCoord
         {
             get
             {
-                return territory2Coord;
+                return territory2CenterCoord;
             }
         }
 
@@ -47,13 +48,13 @@ namespace Terrain
             this.width = width;
             coord2ID = new int[length, width];
             id2Territory = new List<Territory>();
-            territory2Coord = new Dictionary<Territory, Coord2Int>();
+            territory2CenterCoord = new Dictionary<Territory, Coord2Int>();
             Reset();
         }
 
         internal void Reset()
         {
-            territory2Coord.Clear();
+            territory2CenterCoord.Clear();
             id2Territory?.Clear();
             for (int x = 0; x < coord2ID.GetLength(0); x++)
             {
@@ -90,7 +91,7 @@ namespace Terrain
 
             var index = id2Territory.Count;
             id2Territory.Add(territory);
-            territory2Coord.Add(territory, centerCoord);
+            territory2CenterCoord.Add(territory, centerCoord);
             for (int x = centerCoord.x - territory.Range; x < centerCoord.x + territory.Range; x++)
             {
                 for (int y = centerCoord.y - territory.Range; y < centerCoord.y + territory.Range; y++)
