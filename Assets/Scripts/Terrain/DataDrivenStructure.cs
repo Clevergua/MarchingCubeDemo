@@ -10,9 +10,10 @@ namespace Terrain
         {
             var fileName = $"{GetType().Name}.dat";
             var formatter = new BinaryFormatter();
-            var path = System.IO.Path.Combine(Application.streamingAssetsPath, fileName);
+            var path = Path.Combine(Application.streamingAssetsPath, "StructureData", fileName);
             var stream = File.OpenRead(path);
             coord2Block = formatter.Deserialize(stream) as byte[,,];
+
         }
     }
 }

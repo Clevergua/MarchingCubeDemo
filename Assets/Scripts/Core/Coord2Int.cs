@@ -47,6 +47,11 @@ namespace Core
             return hashCode;
         }
 
+        public override string ToString()
+        {
+            return $"({x}, {y})";
+        }
+
         public static bool operator ==(Coord2Int left, Coord2Int right)
         {
             return left.Equals(right);

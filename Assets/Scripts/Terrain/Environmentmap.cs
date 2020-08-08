@@ -1,32 +1,28 @@
 ﻿using Core;
 using System.Collections.Generic;
-
+using System;
 namespace Terrain
 {
     /// <summary>
-    /// 温度湿度基本海拔以及生物群落的环境图
+    /// 温度湿度基本海拔以及生物群落的二维环境图
     /// </summary>
     internal class Environmentmap
     {
-        public int xLength;
-        public int zLength;
+        private int[,] baseheightmap;
+        private int[,] basetemperaturemap;
+        private int[,] basehumiditymap;
+        private IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome;
 
-        public int[,] baseHeightmap;
-        public int[,] baseTemperaturemap;
-        public int[,] baseHumiditymap;
-        public IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome;
-
-        public Environmentmap(int xLength, int zLength, IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome)
+        public Environmentmap(int[,] baseheightmap, int[,] basetemperaturemap, int[,] basehumiditymap, IReadOnlyDictionary<EnvironmentDegree, Biome> environmentDegree2Biome)
         {
-            this.xLength = xLength;
-            this.zLength = zLength;
             //高度图
-            baseHeightmap = new int[xLength, zLength];
+            this.baseheightmap = baseheightmap ?? throw new ArgumentNullException();
             //温度图
-            baseTemperaturemap = new int[xLength, zLength];
+            this.basetemperaturemap = basetemperaturemap ?? throw new ArgumentNullException();
             //湿度图
-            baseHumiditymap = new int[xLength, zLength];
-            this.environmentDegree2Biome = environmentDegree2Biome;
+            this.basehumiditymap = basehumiditymap ?? throw new ArgumentNullException();
+            //群落配置
+            this.environmentDegree2Biome = environmentDegree2Biome ?? throw new ArgumentNullException();
         }
 
         /// <summary>
@@ -38,7 +34,7 @@ namespace Terrain
         /// <returns></returns>
         public int GetActualTemperature(Coord3Int coord)
         {
-            return GetActualTemperature(baseTemperaturemap[coord.x, coord.z], coord.y);
+            return GetActualTemperature(basetemperaturemap[coord.x, coord.z], coord.y);
         }
         /// <summary>
         /// 获得实际温度
@@ -124,7 +120,7 @@ namespace Terrain
         /// <returns></returns>
         public Biome GetBiome(Coord2Int coord)
         {
-            return GetBiome(baseTemperaturemap[coord.x, coord.y], baseHumiditymap[coord.x, coord.y]);
+            return GetBiome(basetemperaturemap[coord.x, coord.y], basehumiditymap[coord.x, coord.y]);
         }
     }
 }

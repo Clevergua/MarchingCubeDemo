@@ -14,7 +14,6 @@ namespace Terrain
         private int width;
         private int[,] coord2ID;
         private List<Structure> id2Structure;
-        private Dictionary<Structure, Coord2Int> structure2SWCoord;
 
         public int Length
         {
@@ -46,7 +45,7 @@ namespace Terrain
                 {
                     for (int z = 0; z < structure.Width; z++)
                     {
-                        if (coord2ID[x, z] == -1)
+                        if (coord2ID[swCoord.x + x, swCoord.y + z] == -1)
                         {
                             //pass
                         }
@@ -66,11 +65,13 @@ namespace Terrain
             {
                 for (int z = 0; z < structure.Width; z++)
                 {
+
                     coord2ID[swCoord.x + x, swCoord.y + z] = id2Structure.Count;
                 }
             }
+
             id2Structure.Add(structure);
-            structure2SWCoord.Add(structure, swCoord);
+            structure.TerritorySWCoord = swCoord;
             return true;
         }
         private bool InRange(int x, int z)
@@ -84,18 +85,10 @@ namespace Terrain
                 return id2Structure;
             }
         }
-        public IReadOnlyDictionary<Structure, Coord2Int> Structure2SWCoord
-        {
-            get
-            {
-                return structure2SWCoord;
-            }
-        }
         public Structuremap(int length, int width)
         {
             this.length = length;
             this.width = width;
-            structure2SWCoord = new Dictionary<Structure, Coord2Int>();
             coord2ID = new int[length, width];
             for (int x = 0; x < length; x++)
             {

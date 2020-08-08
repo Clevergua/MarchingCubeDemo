@@ -25,7 +25,8 @@ namespace Terrain
                 return new Coord2Int(Range, Range);
             }
         }
-
+        public Coord2Int IslandCoord { get; internal set; }
+        public Coord2Int IslandSWCoord { get { return IslandCoord - Pivot2Int; } }
         /// <summary>
         /// 根据环境信息和种子生成建筑图
         /// </summary>
@@ -35,7 +36,7 @@ namespace Terrain
         /// <summary>
         /// 生成局部的道路图,生成之前需要完成建筑图的生成
         /// </summary>
-        internal virtual Pathmap GeneratePathmap()
+        internal Pathmap GeneratePathmap()
         {
             var map = new Pathmap(structuremap.Length, structuremap.Width);
             var calculatedStructures = new List<Structure>();
@@ -52,8 +53,8 @@ namespace Terrain
                 var index = -1;
                 for (int i = 0; i < uncalculatedStructures.Count; i++)
                 {
-                    var c1 = structuremap.Structure2SWCoord[current] + current.Pivot2Int;
-                    var c2 = structuremap.Structure2SWCoord[uncalculatedStructures[i]] + uncalculatedStructures[i].Pivot2Int;
+                    var c1 = current.TerritoryCoord;
+                    var c2 = uncalculatedStructures[i].TerritoryCoord;
                     var manhattanDistance = Coord2Int.ManhattanDistance(c1, c2);
                     if (manhattanDistance < minDistance)
                     {
@@ -63,14 +64,16 @@ namespace Terrain
                 }
                 var target = uncalculatedStructures[index];
                 //通过A*生成到目标点的路径
-                var coords = GenerateCoordsOnPathByAStar(structuremap.Structure2SWCoord[current] + current.Pivot2Int, structuremap.Structure2SWCoord[target] + target.Pivot2Int, structuremap);
+                var coords = GenerateCoordsOnPathByAStar(current.TerritoryCoord, target.TerritoryCoord, structuremap);
                 foreach (var c in coords)
                 {
-                    if (!map[c.x, c.y] && structuremap[c.x, c.y] == 0)
+                    if (!map[c.x, c.y] && structuremap[c.x, c.y] == -1)
                     {
                         map[c.x, c.y] = true;
                     }
                 }
+                uncalculatedStructures.RemoveAt(index);
+                calculatedStructures.Add(target);
             }
             return map;
         }
@@ -130,7 +133,7 @@ namespace Terrain
                             {
                                 var neighbor = new Coord2Int(x, z);
                                 //如果相邻点可走
-                                //这里认为起始和目标领地以及空地可走
+                                //这里认为起始和目标建筑以及空地可走
                                 var neighborTerritoryIndex = structuremap[neighbor.x, neighbor.y];
                                 if (neighborTerritoryIndex == -1 || neighborTerritoryIndex == startIndex || neighborTerritoryIndex == goalIndex)
                                 {
@@ -169,6 +172,6 @@ namespace Terrain
             }
             throw new Exception("Open set is empty but goal was never reached!");
         }
-    
+
     }
 }

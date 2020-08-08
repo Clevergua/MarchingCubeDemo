@@ -32,14 +32,14 @@ namespace Terrain
         {
             get
             {
-                return coord2Block.GetLength(1);
+                return coord2Block.GetLength(2);
             }
         }
         public int Height
         {
             get
             {
-                return coord2Block.GetLength(2);
+                return coord2Block.GetLength(1);
             }
         }
         /// <summary>
@@ -78,6 +78,14 @@ namespace Terrain
             }
         }
 
+        public Coord2Int TerritorySWCoord { get; internal set; }
+        public Coord2Int TerritoryCoord
+        {
+            get
+            {
+                return TerritorySWCoord + Pivot2Int;
+            }
+        }
         private void RotateData(Direction direction)
         {
             switch (Mathf.Abs((int)direction - (int)this.direction))

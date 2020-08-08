@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Core;
@@ -15,93 +16,78 @@ namespace Tests
         private int i;
         // A Test behaves as an ordinary method
         [Test]
-        public void TerrainTestSimplePasses()
+        public async void 测试岛屿生成流程()
         {
-            A();
-            Debug.Log("TerrainTestSimplePasses");
-        }
-        async void A()
-        {
-            Debug.Log("TerrainTestSimplePasses1");
-            var d = Task.Delay(1000);
-            await d;
-            Debug.Log("TerrainTestSimplePasses2");
-            await B();
-            Debug.Log("TerrainTestSimplePasses3");
-        }
-        async Task B()
-        {
-            Debug.Log(Thread.CurrentThread.ManagedThreadId);
-            await Task.Run(() =>
-            {
-                Debug.Log(Thread.CurrentThread.ManagedThreadId);
-                i = 5;
-                throw new Exception("TerrainTestSimplePasses3");
-            });
+            var island = new Island(1, 32);
+            await island.Generate();
         }
 
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         // `yield return null;` to skip a frame.
-        [UnityTest]
-        public IEnumerator 测试二维噪声概率()
+        [Test]
+        public async void 测试二维噪声概率()
         {
             var sampleCount = 10000;
             var density = 0.0007f;
             var range2Count = new int[10];
             var min = 0f;
             var max = 0f;
-            for (int x = 0; x < sampleCount; x++)
+            var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            await Task.Run(() =>
             {
-                for (int y = 0; y < sampleCount; y++)
+                Debug.Log(Thread.CurrentThread.ManagedThreadId);
+                for (int x = 0; x < sampleCount; x++)
                 {
-                    var value = PerlinNoise.PerlinNoise2D(UnityEngine.Random.Range(int.MinValue, int.MaxValue), x * density, y * density) * 1.5789f;
-                    var t = (value * value);
-                    value *= 1.4f - 0.4f * t;
-                    if (value < -0.8f)
+                    for (int y = 0; y < sampleCount; y++)
                     {
-                        range2Count[0] += 1;
+                        var value = PerlinNoise.PerlinNoise2D(seed, x * density, y * density) * 1.5789f;
+                        var t = (value * value);
+                        value *= 1.4f - 0.4f * t;
+                        if (value < -0.8f)
+                        {
+                            range2Count[0] += 1;
+                        }
+                        else if (value < -0.6f)
+                        {
+                            range2Count[1] += 1;
+                        }
+                        else if (value < -0.4f)
+                        {
+                            range2Count[2] += 1;
+                        }
+                        else if (value < -0.2f)
+                        {
+                            range2Count[3] += 1;
+                        }
+                        else if (value < 0f)
+                        {
+                            range2Count[4] += 1;
+                        }
+                        else if (value < 0.2f)
+                        {
+                            range2Count[5] += 1;
+                        }
+                        else if (value < 0.4f)
+                        {
+                            range2Count[6] += 1;
+                        }
+                        else if (value < 0.6f)
+                        {
+                            range2Count[7] += 1;
+                        }
+                        else if (value < 0.8f)
+                        {
+                            range2Count[8] += 1;
+                        }
+                        else
+                        {
+                            range2Count[9] += 1;
+                        }
+                        min = value < min ? value : min;
+                        max = value > max ? value : max;
                     }
-                    else if (value < -0.6f)
-                    {
-                        range2Count[1] += 1;
-                    }
-                    else if (value < -0.4f)
-                    {
-                        range2Count[2] += 1;
-                    }
-                    else if (value < -0.2f)
-                    {
-                        range2Count[3] += 1;
-                    }
-                    else if (value < 0f)
-                    {
-                        range2Count[4] += 1;
-                    }
-                    else if (value < 0.2f)
-                    {
-                        range2Count[5] += 1;
-                    }
-                    else if (value < 0.4f)
-                    {
-                        range2Count[6] += 1;
-                    }
-                    else if (value < 0.6f)
-                    {
-                        range2Count[7] += 1;
-                    }
-                    else if (value < 0.8f)
-                    {
-                        range2Count[8] += 1;
-                    }
-                    else
-                    {
-                        range2Count[9] += 1;
-                    }
-                    min = value < min ? value : min;
-                    max = value > max ? value : max;
                 }
-                yield return null;
-            }
+            });
             for (int i = 0; i < range2Count.Length; i++)
             {
                 Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount) * 100}%");
