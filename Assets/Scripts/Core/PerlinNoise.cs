@@ -136,7 +136,6 @@ namespace Core
             }
             return result;
         }
-
         private static float Pow(float f, int p)
         {
             float res = f;

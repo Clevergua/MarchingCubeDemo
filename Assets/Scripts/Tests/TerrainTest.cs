@@ -13,7 +13,6 @@ namespace Tests
 {
     public class TerrainTest
     {
-        private int i;
         // A Test behaves as an ordinary method
         [Test]
         public async void 测试岛屿生成流程()
@@ -22,8 +21,6 @@ namespace Tests
             await island.Generate();
         }
 
-        // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
-        // `yield return null;` to skip a frame.
         [Test]
         public async void 测试二维噪声概率()
         {
@@ -35,7 +32,6 @@ namespace Tests
             var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
             await Task.Run(() =>
             {
-                Debug.Log(Thread.CurrentThread.ManagedThreadId);
                 for (int x = 0; x < sampleCount; x++)
                 {
                     for (int y = 0; y < sampleCount; y++)
@@ -96,80 +92,19 @@ namespace Tests
         }
         // A UnityTest behaves like a coroutine in Play Mode. In Edit Mode you can use
         // `yield return null;` to skip a frame.
-        [UnityTest]
-        public IEnumerator 测试二维随机数()
+        [Test]
+        public async void 测试二维随机数()
         {
             var sampleCount = 100;
             var range2Count = new int[10];
-            for (int x = 0; x < sampleCount; x++)
+            var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            await Task.Run(() =>
             {
-                for (int y = 0; y < sampleCount; y++)
+                for (int x = 0; x < sampleCount; x++)
                 {
-                    var r = RNG.Random2(x, y, UnityEngine.Random.Range(int.MinValue, int.MaxValue));
-                    var value = r % 50 + 50;
-
-                    if (value < 10)
+                    for (int y = 0; y < sampleCount; y++)
                     {
-                        range2Count[0] += 1;
-                    }
-                    else if (value < 20)
-                    {
-                        range2Count[1] += 1;
-                    }
-                    else if (value < 30)
-                    {
-                        range2Count[2] += 1;
-                    }
-                    else if (value < 40)
-                    {
-                        range2Count[3] += 1;
-                    }
-                    else if (value < 50)
-                    {
-                        range2Count[4] += 1;
-                    }
-                    else if (value < 60)
-                    {
-                        range2Count[5] += 1;
-                    }
-                    else if (value < 70)
-                    {
-                        range2Count[6] += 1;
-                    }
-                    else if (value < 80)
-                    {
-                        range2Count[7] += 1;
-                    }
-                    else if (value < 90)
-                    {
-                        range2Count[8] += 1;
-                    }
-                    else
-                    {
-                        range2Count[9] += 1;
-                    }
-                }
-            }
-            yield return null;
-
-            for (int i = 0; i < range2Count.Length; i++)
-            {
-                Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount) * 100}%");
-            }
-        }
-
-        [UnityTest]
-        public IEnumerator 测试三维随机数()
-        {
-            var sampleCount = 1000;
-            var range2Count = new int[10];
-            for (int x = 0; x < sampleCount; x++)
-            {
-                for (int y = 0; y < 256; y++)
-                {
-                    for (int z = 0; z < sampleCount; z++)
-                    {
-                        var r = RNG.Random3(x, y, z, 3254);
+                        var r = RNG.Random2(x, y, seed);
                         var value = r % 50 + 50;
 
                         if (value < 10)
@@ -213,84 +148,154 @@ namespace Tests
                             range2Count[9] += 1;
                         }
                     }
-
                 }
+            });
+            for (int i = 0; i < range2Count.Length; i++)
+            {
+                Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount) * 100}%");
             }
-            yield return null;
+        }
 
+        [Test]
+        public async void 测试三维随机数()
+        {
+            var sampleCount = 1000;
+            var range2Count = new int[10];
+            var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            await Task.Run(() =>
+            {
+                for (int x = 0; x < sampleCount; x++)
+                {
+                    for (int y = 0; y < 256; y++)
+                    {
+                        for (int z = 0; z < sampleCount; z++)
+                        {
+                            var r = RNG.Random3(x, y, z, seed);
+                            var value = r % 50 + 50;
+
+                            if (value < 10)
+                            {
+                                range2Count[0] += 1;
+                            }
+                            else if (value < 20)
+                            {
+                                range2Count[1] += 1;
+                            }
+                            else if (value < 30)
+                            {
+                                range2Count[2] += 1;
+                            }
+                            else if (value < 40)
+                            {
+                                range2Count[3] += 1;
+                            }
+                            else if (value < 50)
+                            {
+                                range2Count[4] += 1;
+                            }
+                            else if (value < 60)
+                            {
+                                range2Count[5] += 1;
+                            }
+                            else if (value < 70)
+                            {
+                                range2Count[6] += 1;
+                            }
+                            else if (value < 80)
+                            {
+                                range2Count[7] += 1;
+                            }
+                            else if (value < 90)
+                            {
+                                range2Count[8] += 1;
+                            }
+                            else
+                            {
+                                range2Count[9] += 1;
+                            }
+                        }
+
+                    }
+                }
+            });
             for (int i = 0; i < range2Count.Length; i++)
             {
                 Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount * 256) * 100}%");
             }
         }
 
-        [UnityTest]
-        public IEnumerator 测试三维噪声概率()
+        [Test]
+        public async void 测试三维噪声概率()
         {
-            var sampleCount = 1000;
+            var length = 1024;
+            var allCount = 0;
             var density = 0.007f;
             var range2Count = new int[10];
             var min = 0f;
             var max = 0f;
             var seed = 0;
-            for (int x = 0; x < sampleCount; x++)
+            var tasks = new List<Task>();
+            for (int y = 0; y < 256; y++)
             {
-                for (int y = 0; y < 256; y++)
+                tasks.Add(Task.Run(() =>
                 {
-                    for (int z = 0; z < sampleCount; z++)
+                    for (int x = 0; x < length; x++)
                     {
-                        var value = PerlinNoise.PerlinNoise3D(seed, x * density, y * density, z * density);
-                        //var t = (value * value);
-                        //value *= 1.4f - 0.4f * t;
-                        if (value < -0.8f)
+                        for (int z = 0; z < length; z++)
                         {
-                            range2Count[0] += 1;
+                            var value = PerlinNoise.SuperimposedOctave3D(seed, x * density, y * density, z * density, 2);
+                            //var t = (value * value);
+                            //value *= 1.4f - 0.4f * t;
+                            if (value < -0.8f)
+                            {
+                                range2Count[0] += 1;
+                            }
+                            else if (value < -0.6f)
+                            {
+                                range2Count[1] += 1;
+                            }
+                            else if (value < -0.4f)
+                            {
+                                range2Count[2] += 1;
+                            }
+                            else if (value < -0.2f)
+                            {
+                                range2Count[3] += 1;
+                            }
+                            else if (value < 0f)
+                            {
+                                range2Count[4] += 1;
+                            }
+                            else if (value < 0.2f)
+                            {
+                                range2Count[5] += 1;
+                            }
+                            else if (value < 0.4f)
+                            {
+                                range2Count[6] += 1;
+                            }
+                            else if (value < 0.6f)
+                            {
+                                range2Count[7] += 1;
+                            }
+                            else if (value < 0.8f)
+                            {
+                                range2Count[8] += 1;
+                            }
+                            else
+                            {
+                                range2Count[9] += 1;
+                            }
+                            min = value < min ? value : min;
+                            max = value > max ? value : max;
+                            allCount++;
                         }
-                        else if (value < -0.6f)
-                        {
-                            range2Count[1] += 1;
-                        }
-                        else if (value < -0.4f)
-                        {
-                            range2Count[2] += 1;
-                        }
-                        else if (value < -0.2f)
-                        {
-                            range2Count[3] += 1;
-                        }
-                        else if (value < 0f)
-                        {
-                            range2Count[4] += 1;
-                        }
-                        else if (value < 0.2f)
-                        {
-                            range2Count[5] += 1;
-                        }
-                        else if (value < 0.4f)
-                        {
-                            range2Count[6] += 1;
-                        }
-                        else if (value < 0.6f)
-                        {
-                            range2Count[7] += 1;
-                        }
-                        else if (value < 0.8f)
-                        {
-                            range2Count[8] += 1;
-                        }
-                        else
-                        {
-                            range2Count[9] += 1;
-                        }
-                        min = value < min ? value : min;
-                        max = value > max ? value : max;
                     }
-                }
-                yield return null;
+                }));
             }
             for (int i = 0; i < range2Count.Length; i++)
             {
-                Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (sampleCount * sampleCount) * 100}%");
+                Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (allCount) * 100}%");
             }
             Debug.Log($"Min:{min}, Max:{max}");
         }

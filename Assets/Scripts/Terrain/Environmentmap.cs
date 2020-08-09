@@ -8,6 +8,15 @@ namespace Terrain
     /// </summary>
     internal class Environmentmap
     {
+        public static readonly int MinBaseHeight = 48;
+        public static readonly int MaxBaseHeight = 128;
+
+        public static readonly int MinTemperature = 0;
+        public static readonly int MaxTemperature = 100;
+
+        public static readonly int MinHumidity = 0;
+        public static readonly int MaxHumidity = 100;
+
         private int[,] baseheightmap;
         private int[,] basetemperaturemap;
         private int[,] basehumiditymap;
@@ -46,14 +55,14 @@ namespace Terrain
         /// <returns></returns>
         public int GetActualTemperature(int baseTemperature, int height)
         {
-            if (height < Constants.MinHeight)
+            if (height < MinBaseHeight)
             {
                 return baseTemperature;
             }
             else
             {
                 var dropedPerMeter = 0.1f;
-                var temperature = baseTemperature - (int)((height - Constants.MinHeight) * dropedPerMeter);
+                var temperature = baseTemperature - (int)((height - MinBaseHeight) * dropedPerMeter);
                 temperature = temperature < 0 ? 0 : temperature;
                 return temperature;
             }
@@ -113,6 +122,13 @@ namespace Terrain
             }
 
         }
+
+        internal int GetBaseheight(int x, int z)
+        {
+            return baseheightmap[x, z];
+        }
+
+
         /// <summary>
         /// 根据当前x,z轴坐标获取当前生物群落
         /// </summary>
