@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Core;
 using NUnit.Framework;
 using Terrain;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace Tests
 {
@@ -18,7 +14,7 @@ namespace Tests
         public async void 测试岛屿生成流程()
         {
             var island = new Island(1, 32);
-            await island.Generate();
+            await island.GenerateAsync();
         }
 
         [Test]
@@ -229,7 +225,7 @@ namespace Tests
         {
             var length = 1024;
             var allCount = 0;
-            var density = 0.007f;
+            var density = 0.0023f;
             var range2Count = new int[10];
             var min = 0f;
             var max = 0f;
@@ -244,8 +240,6 @@ namespace Tests
                         for (int z = 0; z < length; z++)
                         {
                             var value = PerlinNoise.SuperimposedOctave3D(seed, x * density, y * density, z * density, 2);
-                            //var t = (value * value);
-                            //value *= 1.4f - 0.4f * t;
                             if (value < -0.8f)
                             {
                                 range2Count[0] += 1;
@@ -293,6 +287,7 @@ namespace Tests
                     }
                 }));
             }
+            await Task.WhenAll(tasks);
             for (int i = 0; i < range2Count.Length; i++)
             {
                 Debug.Log($"{i}阶段数量:{range2Count[i]}:占比:{(float)range2Count[i] / (allCount) * 100}%");

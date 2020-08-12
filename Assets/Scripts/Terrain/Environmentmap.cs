@@ -122,13 +122,16 @@ namespace Terrain
             }
 
         }
-
+        /// <summary>
+        /// 获得基础高度
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="z"></param>
+        /// <returns></returns>
         internal int GetBaseheight(int x, int z)
         {
             return baseheightmap[x, z];
         }
-
-
         /// <summary>
         /// 根据当前x,z轴坐标获取当前生物群落
         /// </summary>

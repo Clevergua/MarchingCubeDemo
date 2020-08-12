@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Terrain;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -12,13 +13,13 @@ public class GameLoop : MonoBehaviour
     [SerializeField] Text text;
     [SerializeField] List<GameObject> prefabs;
     private bool hasShown = false;
-
+    Task task;
+    Island island;
     // Start is called before the first frame update
     void Start()
     {
-        //Create level
-        //terrainGen = new Island();
-        //StartCoroutine(terrainGen.TTT());
+        island = new Island(seed, 16);
+        task = Task.Run(island.GenerateAsync);
     }
     IEnumerator Show()
     {
@@ -44,10 +45,6 @@ public class GameLoop : MonoBehaviour
                         {
                             Instantiate(prefabs[l.blockmap[x, y, z]], new Vector3(x, y, z), Quaternion.identity, parent.transform);
                         }
-                        if (true)
-                        {
-
-                        }
                     }
                 }
             }
@@ -57,11 +54,11 @@ public class GameLoop : MonoBehaviour
     }
     private void Update()
     {
-        //text.text = $"{terrainGen.currentOperation}::{terrainGen.progress}";
-        //if (terrainGen.isDone && !hasShown)
-        //{
-        //    hasShown = true;
-        //    StartCoroutine(Show());
-        //}
+        text.text = island.currentOperation;
+        if (terrainGen.isDone && !hasShown)
+        {
+            hasShown = true;
+            StartCoroutine(Show());
+        }
     }
 }
