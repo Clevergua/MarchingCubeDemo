@@ -85,7 +85,7 @@ namespace Terrain
                                 var baseHeight = environmentmap.GetBaseheight(c.x, c.z);
                                 if (baseHeight < minHeight)
                                 {
-                                    minHeight = height;
+                                    minHeight = baseHeight;
                                     processedCoord2D.Add(coord2D);
                                     break;
                                 }

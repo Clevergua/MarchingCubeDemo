@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Transactions;
 using Core;
 
 namespace Terrain
@@ -9,7 +7,7 @@ namespace Terrain
     internal class GrassLand : Biome
     {
         internal override float PositiveNoise { get { return 0.15f; } }
-        internal override float NegativeNoise { get { return -0.1f; } }
+        internal override float NegativeNoise { get { return -0.3f; } }
         internal override void ProcessShapeCoords(byte[,,] blockmap, bool shape, HashSet<Coord3Int> coordGroup, Environmentmap environmentmap, int seed)
         {
             if (shape)
@@ -34,8 +32,6 @@ namespace Terrain
                 }
             }
         }
-
-
 
         internal override void GenerateSurface(byte[,,] blockmap, Coord2Int coord2Int, Environmentmap environmentmap, int seed)
         {
@@ -72,61 +68,45 @@ namespace Terrain
             var r = RNG.Random2(x, z, seed - 223) % 50 + 50;
             for (int y = 0; y < height; y++)
             {
+                var coord = new Coord3Int(x, y, z);
                 if (blockmap[x, y, z] == (byte)BlockType.Air && y > 0 && blockmap[x, y - 1, z] == (byte)BlockType.Dirt)
                 {
-                    var coord = new Coord3Int(x, y, z);
-                    if (r < 10)
+                    if (!coord2NoiseFactor.ContainsKey(coord) || (coord2NoiseFactor.ContainsKey(coord) && coord2NoiseFactor[coord] > SafeFactor))
                     {
-                        var oak = new Oak(coord, seed);
-                        var startPoint = coord - new Coord3Int(oak.Pivot2Int.x, 0, oak.Pivot2Int.y);
-                        if (startPoint.x < 0 || startPoint.x + oak.Length > blockmap.GetLength(0) ||
-                            startPoint.y < 0 || startPoint.y + oak.Width > blockmap.GetLength(1) ||
-                            startPoint.z < 0 || startPoint.z + oak.Height > blockmap.GetLength(2))
+                        if (r < 3)
                         {
-                            continue;
-                        }
-                        for (int lx = 0; lx < oak.Length; lx++)
-                        {
-                            for (int ly = 0; ly < oak.Width; ly++)
+                            var oak = new Oak(coord, seed);
+                            var startPoint = coord - new Coord3Int(oak.Pivot2Int.x, 0, oak.Pivot2Int.y);
+                            if (startPoint.x < 0 || startPoint.x + oak.Length > blockmap.GetLength(0) ||
+                                startPoint.y < 0 || startPoint.y + oak.Width > blockmap.GetLength(1) ||
+                                startPoint.z < 0 || startPoint.z + oak.Height > blockmap.GetLength(2))
                             {
-                                for (int lz = 0; lz < oak.Height; lz++)
+                                continue;
+                            }
+
+                            for (int lx = 0; lx < oak.Length; lx++)
+                            {
+                                for (int lz = 0; lz < oak.Width; lz++)
                                 {
-                                    var wx = startPoint.x + lx;
-                                    var wy = startPoint.y + ly;
-                                    var wz = startPoint.z + lz;
-                                    var wc = new Coord3Int(wx, wy, wz);
-                                    if (coord2NoiseFactor.ContainsKey(wc) && coord2NoiseFactor[wc] < SafeFactor)
+                                    for (int ly = 0; ly < oak.Height; ly++)
                                     {
-                                        continue;
+                                        var wx = startPoint.x + lx;
+                                        var wy = startPoint.y + ly;
+                                        var wz = startPoint.z + lz;
+                                        if (oak[lx, ly, lz] != (byte)BlockType.Air && blockmap[wx, wy, wz] == (byte)BlockType.Air)
+                                        {
+                                            blockmap[wx, wy, wz] = oak[lx, ly, lz];
+                                        }
                                     }
                                 }
                             }
                         }
-                        for (int lx = 0; lx < oak.Length; lx++)
-                        {
-                            for (int ly = 0; ly < oak.Width; ly++)
-                            {
-                                for (int lz = 0; lz < oak.Height; lz++)
-                                {
-                                    var wx = startPoint.x + lx;
-                                    var wy = startPoint.y + ly;
-                                    var wz = startPoint.z + lz;
-                                    if (oak[lx, ly, lz] != (byte)BlockType.Air && blockmap[wx, wy, wz] == (byte)BlockType.Air)
-                                    {
-                                        blockmap[wx, wy, wz] = oak[lx, ly, lz];
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else if (r < 60)
-                    {
-                        if (coord2NoiseFactor[coord] >= SafeFactor)
+                        else if (r < 60)
                         {
                             blockmap[x, y, z] = (byte)BlockType.Grass;
                         }
+                        break;
                     }
-                    break;
                 }
             }
         }
