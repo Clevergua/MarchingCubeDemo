@@ -1,16 +1,13 @@
-﻿using Core;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Terrain;
-using Unity.UIWidgets.foundation;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class GameLoop : MonoBehaviour
 {
-    private int seed;
+    [SerializeField] int seed;
     [SerializeField] Text text;
     [SerializeField] List<Color> block2Color;
     [SerializeField] Material material;
@@ -21,6 +18,7 @@ public class GameLoop : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         island = new Island(seed, 16);
         var task = Task.Run(island.GenerateAsync);
 

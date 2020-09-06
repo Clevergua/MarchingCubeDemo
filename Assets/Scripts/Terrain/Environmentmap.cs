@@ -61,7 +61,7 @@ namespace Terrain
             }
             else
             {
-                var dropedPerMeter = 0.1f;
+                var dropedPerMeter = 0.5f;
                 var temperature = baseTemperature - (int)((height - MinBaseHeight) * dropedPerMeter);
                 temperature = temperature < 0 ? 0 : temperature;
                 return temperature;
@@ -73,9 +73,12 @@ namespace Terrain
         /// <param name="baseTemperature"></param>
         /// <param name="baseHumidity"></param>
         /// <returns></returns>
-        public Biome GetBiome(int baseTemperature, int baseHumidity)
+        public Biome GetBiome(int x, int z)
         {
-            if (baseTemperature < 33)
+            var baseTemperature = basetemperaturemap[x, z];
+            var temperature = GetActualTemperature(baseTemperature, GetBaseheight(x, z));
+            var baseHumidity = basehumiditymap[x, z];
+            if (temperature < 33)
             {
                 if (baseHumidity < 33)
                 {
@@ -90,7 +93,7 @@ namespace Terrain
                     return environmentDegree2Biome[EnvironmentDegree.LowTemperatureHighHumidity];
                 }
             }
-            else if (baseTemperature < 66)
+            else if (temperature < 66)
             {
                 if (baseHumidity < 33)
                 {
@@ -139,7 +142,7 @@ namespace Terrain
         /// <returns></returns>
         public Biome GetBiome(Coord2Int coord)
         {
-            return GetBiome(basetemperaturemap[coord.x, coord.y], basehumiditymap[coord.x, coord.y]);
+            return GetBiome(coord.x, coord.y);
         }
     }
 }

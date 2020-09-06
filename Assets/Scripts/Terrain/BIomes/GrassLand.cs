@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Core;
 
@@ -6,8 +7,8 @@ namespace Terrain
 {
     internal class GrassLand : Biome
     {
-        internal override float PositiveNoise { get { return 0.15f; } }
-        internal override float NegativeNoise { get { return -0.3f; } }
+        internal override float PositiveNoise { get => 0.25f; }
+        internal override float NegativeNoise { get => -0.15f; }
         internal override void ProcessShapeCoords(byte[,,] blockmap, bool shape, HashSet<Coord3Int> coordGroup, Environmentmap environmentmap, int seed)
         {
             if (shape)
@@ -19,10 +20,10 @@ namespace Terrain
             }
             else
             {
-                //%10的概率产生岩浆 90%的概率产生湖泊
+                //%2的概率产生岩浆 98%的概率产生湖泊
                 var first = coordGroup.First();
                 var r = RNG.Random3(first.x, first.y, first.z, seed - 4367) % 50 + 50;
-                if (r <= 90)
+                if (r <= 98)
                 {
                     FillPool(blockmap, coordGroup, environmentmap, (byte)BlockType.Water);
                 }
@@ -33,7 +34,7 @@ namespace Terrain
             }
         }
 
-        internal override void GenerateSurface(byte[,,] blockmap, Coord2Int coord2Int, Environmentmap environmentmap, int seed)
+        internal override void GenerateSurface(byte[,,] blockmap, Coord2Int coord2Int, Environmentmap environmentmap, IReadOnlyDictionary<Coord3Int, float> coord2NoiseFactor, int seed)
         {
             //1~7
             var dirtThickness = RNG.Random2(coord2Int.x, coord2Int.y, seed) % 4 + 4;
@@ -65,7 +66,7 @@ namespace Terrain
             var x = coord2Int.x;
             var z = coord2Int.y;
             var height = blockmap.GetLength(1);
-            var r = RNG.Random2(x, z, seed - 223) % 50 + 50;
+            var r = RNG.Random2(x, z, seed - 223) % 500 + 500;
             for (int y = 0; y < height; y++)
             {
                 var coord = new Coord3Int(x, y, z);
@@ -73,7 +74,7 @@ namespace Terrain
                 {
                     if (!coord2NoiseFactor.ContainsKey(coord) || (coord2NoiseFactor.ContainsKey(coord) && coord2NoiseFactor[coord] > SafeFactor))
                     {
-                        if (r < 3)
+                        if (r < 5)
                         {
                             var oak = new Oak(coord, seed);
                             var startPoint = coord - new Coord3Int(oak.Pivot2Int.x, 0, oak.Pivot2Int.y);
@@ -101,7 +102,7 @@ namespace Terrain
                                 }
                             }
                         }
-                        else if (r < 60)
+                        else if (r < 600)
                         {
                             blockmap[x, y, z] = (byte)BlockType.Grass;
                         }

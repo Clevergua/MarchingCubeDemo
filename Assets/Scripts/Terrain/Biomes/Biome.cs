@@ -8,11 +8,11 @@ namespace Terrain
     {
         public static readonly float SafeFactor = 0.5f;
         /// <summary>
-        /// 正噪声值:该数值越小更容易生成山峰(取值范围为:0.1`0.5)
+        /// 正噪声值:该数值越小更容易生成山峰(取值范围为:(0,0.5])
         /// </summary>
         internal abstract float PositiveNoise { get; }
         /// <summary>
-        /// 负噪声值:该数值越大更容易生成坑洞或水池(取值范围为:-0.5~-0.1)
+        /// 负噪声值:该数值越大更容易生成坑洞或水池(取值范围为:[-0.5,0))
         /// </summary>
         internal abstract float NegativeNoise { get; }
 
@@ -32,7 +32,7 @@ namespace Terrain
         /// <param name="coord2Int"></param>
         /// <param name="environmentmap"></param>
         /// <param name="seed"></param>
-        internal abstract void GenerateSurface(byte[,,] blockmap, Coord2Int coord2Int, Environmentmap environmentmap, int seed);
+        internal abstract void GenerateSurface(byte[,,] blockmap, Coord2Int coord2Int, Environmentmap environmentmap, IReadOnlyDictionary<Coord3Int, float> coord2NoiseFactor, int seed);
         /// <summary>
         /// 生成植物
         /// </summary>

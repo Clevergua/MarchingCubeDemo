@@ -31,12 +31,13 @@ namespace Terrain
         public bool isDone { get; private set; } = false;
         public async Task GenerateAsync()
         {
-            GrassLand grassLand = new GrassLand();
+            var grassLand = new GrassLand();
+            var snowyMountain = new SnowyMountains();
             Dictionary<EnvironmentDegree, Biome> environmentDegree2Biome = new Dictionary<EnvironmentDegree, Biome>()
             {
-                { EnvironmentDegree.LowTemperatureLowHumidity, grassLand },
-                { EnvironmentDegree.LowTemperatureMediumHumidity, grassLand },
-                { EnvironmentDegree.LowTemperatureHighHumidity, grassLand },
+                { EnvironmentDegree.LowTemperatureLowHumidity, snowyMountain },
+                { EnvironmentDegree.LowTemperatureMediumHumidity, snowyMountain },
+                { EnvironmentDegree.LowTemperatureHighHumidity, snowyMountain },
                 { EnvironmentDegree.MediumTemperatureLowHumidity, grassLand },
                 { EnvironmentDegree.MediumTemperatureMediumHumidity, grassLand },
                 { EnvironmentDegree.MediumTemperatureHighHumidity, grassLand },
@@ -135,7 +136,7 @@ namespace Terrain
             currentOperation = "正在生成地表";
             Debug.Log(currentOperation);
             {
-                await Task.Run(() => { GenerateSurface(blockmap, environmentmap); });
+                await Task.Run(() => { GenerateSurface(blockmap, environmentmap, coord2NoiseFactor); });
             }
             progress = 70;
             currentOperation = "正在生成植物";
@@ -314,6 +315,7 @@ namespace Terrain
                                 {
                                     var rangeSquare = (x - ix) * (x - ix) + (z - iz) * (z - iz) + (y - h) * (y - h);
                                     var factor = (float)rangeSquare / maxRangeSquare;
+                                    factor *= factor;
                                     if (factor > 1)
                                     {
                                         //抛弃
@@ -681,8 +683,8 @@ namespace Terrain
                 {
                     for (int z = 0; z < length; z++)
                     {
-                        var temperatureNoiseDensity = 0.003f;
-                        var temperatureNoise = PerlinNoise.PerlinNoise2D(seed + 8674, x * temperatureNoiseDensity, z * temperatureNoiseDensity) * 1.578f;
+                        var temperatureNoiseDensity = 0.013f;
+                        var temperatureNoise = PerlinNoise.PerlinNoise2D(seed + 345, x * temperatureNoiseDensity, z * temperatureNoiseDensity) * 1.578f;
                         var t1 = temperatureNoise * temperatureNoise;
                         temperatureNoise *= 1.4f - 0.4f * t1;
 
@@ -699,7 +701,7 @@ namespace Terrain
                 {
                     for (int z = 0; z < length; z++)
                     {
-                        var humidityNoiseDensity = 0.003f;
+                        var humidityNoiseDensity = 0.013f;
                         var humidityNoise = PerlinNoise.PerlinNoise2D(seed + 96, x * humidityNoiseDensity, z * humidityNoiseDensity) * 1.578f;
                         var t2 = humidityNoise * humidityNoise;
                         humidityNoise *= 1.4f - 0.4f * t2;
@@ -861,7 +863,7 @@ namespace Terrain
                 //不是任何形状跳过
             }
         }
-        private void GenerateSurface(byte[,,] blockmap, Environmentmap environmentmap)
+        private void GenerateSurface(byte[,,] blockmap, Environmentmap environmentmap, IReadOnlyDictionary<Coord3Int, float> coord2NoiseFactor)
         {
             var length = blockmap.GetLength(0);
             for (int x = 0; x < length; x++)
@@ -870,7 +872,7 @@ namespace Terrain
                 {
                     var coord2Int = new Coord2Int(x, z);
                     var biome = environmentmap.GetBiome(x, z);
-                    biome.GenerateSurface(blockmap, coord2Int, environmentmap, seed);
+                    biome.GenerateSurface(blockmap, coord2Int, environmentmap, coord2NoiseFactor, seed);
                 }
             }
         }

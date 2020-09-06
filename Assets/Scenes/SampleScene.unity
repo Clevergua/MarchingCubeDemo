@@ -311,10 +311,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a75bd2ae44fca084a82374fad890ceb0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  seed: 453
   text: {fileID: 315413188}
   block2Color:
   - {r: 0, g: 0, b: 0, a: 0}
-  - {r: 0.7924528, g: 0.7924528, b: 0.7924528, a: 1}
+  - {r: 0.4056604, g: 0.38313985, b: 0.36930403, a: 1}
   - {r: 0.4433962, g: 0.3337643, b: 0.22797258, a: 1}
   - {r: 0, g: 0.57230353, b: 1, a: 1}
   - {r: 1, g: 0, b: 0, a: 1}
