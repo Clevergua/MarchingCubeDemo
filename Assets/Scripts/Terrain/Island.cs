@@ -12,15 +12,15 @@ namespace Terrain
         public static readonly int MinNormalTerritoryCount = 2;
         public static readonly int MaxNormalTerritoryCount = 4;
         public static readonly int HeightNoiseImpactRange = 31;
-        public Island(int seed, int worldLength)
+        public Island(int seed, int islandLength)
         {
             this.seed = seed;
-            this.worldLength = worldLength;
-            length = worldLength * Constants.ChunkLength;
-            height = VerticalChunkCount * worldLength;
+            this.islandLength = islandLength;
+            length = islandLength * Constants.ChunkLength;
+            height = VerticalChunkCount * islandLength;
         }
         public int seed { get; private set; }
-        public int worldLength { get; private set; }
+        public int islandLength { get; private set; }
 
         public int length { get; private set; }
         public int height { get; private set; }
