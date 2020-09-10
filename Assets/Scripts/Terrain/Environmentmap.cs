@@ -6,7 +6,7 @@ namespace Terrain
     /// <summary>
     /// 温度湿度基本海拔以及生物群落的二维环境图
     /// </summary>
-    internal class Environmentmap
+    public class Environmentmap
     {
         public static readonly int MinBaseHeight = 48;
         public static readonly int MaxBaseHeight = 128;

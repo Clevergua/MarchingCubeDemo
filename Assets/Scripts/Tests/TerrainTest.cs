@@ -13,7 +13,7 @@ namespace Tests
         [Test]
         public async void 测试岛屿生成流程()
         {
-            var island = new Island(1, 8);
+            var island = new IslandGenerator(1, 8);
             await island.GenerateAsync();
         }
 

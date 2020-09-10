@@ -5,12 +5,8 @@ using UnityEngine;
 
 public class ChunkView : MonoBehaviour
 {
-    private Dictionary<Material, MCRenderer> material2MCRenderer;
-    [SerializeField] GameObject mcRendererPrefab;
-    public void Init(Coord3Int coord, LandVM landVM, IReadOnlyList<BlockViewData> id2BlockViewData)
+    public void Draw(Coord2Int ldbCoord, byte[,,] blockmap)
     {
-        material2MCRenderer = new Dictionary<Material, MCRenderer>();
-        var chunkLength = landVM.ChunkLength;
         var ldbCoord = coord * chunkLength;
         for (int x = ldbCoord.x; x < ldbCoord.x + chunkLength; x++)
         {

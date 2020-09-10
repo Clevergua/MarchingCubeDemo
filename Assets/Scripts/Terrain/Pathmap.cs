@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Terrain
 {
-    internal class Pathmap
+    public class Pathmap
     {
         public static readonly int PathRange = 4;
 

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Terrain
 {
-    internal class Territorymap
+    public class Territorymap
     {
         private int length;
         private int width;

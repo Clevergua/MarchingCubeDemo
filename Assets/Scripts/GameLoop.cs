@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Terrain;
@@ -10,24 +11,20 @@ public class GameLoop : MonoBehaviour
     [SerializeField] int seed;
     [SerializeField] Text text;
     [SerializeField] List<Color> block2Color;
-    [SerializeField] Material material;
-    private bool hasShown = false;
-    Island island;
-    private Mesh mesh;
-
+    private Task<Island> task;
     // Start is called before the first frame update
     void Start()
     {
         seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-        island = new Island(seed, 16);
-        var task = Task.Run(island.GenerateAsync);
-
-        var o = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        mesh = o.GetComponent<MeshFilter>().mesh;
+        var generator = new IslandGenerator();
+        task = Task.Run(() =>
+        {
+            return generator.GenerateAsync(seed, 16);
+        });
     }
     IEnumerator Show()
     {
-        var blockmap = island.result;
+        var blockmap = task.Result.Blockmap;
         for (int x = 0 + 1; x < blockmap.GetLength(0) - 1; x++)
         {
             var parent = new GameObject();
@@ -56,35 +53,32 @@ public class GameLoop : MonoBehaviour
             yield return null;
         }
     }
-
     private void CreateBlock(byte v, Vector3 position, Transform parent)
     {
-        var newMesh = new Mesh();
-
-        newMesh.vertices = mesh.vertices;
-        newMesh.triangles = mesh.triangles;
-        var colors = new Color[mesh.vertices.Length];
-        for (int i = 0; i < colors.Length; i++)
-        {
-            colors[i] = block2Color[v];
-        }
-        newMesh.colors = colors;
-        var go = new GameObject();
-        var mf = go.AddComponent<MeshFilter>();
-        mf.sharedMesh = newMesh;
-        var mr = go.AddComponent<MeshRenderer>();
-        mr.material = material;
-        go.transform.position = position;
-        go.transform.SetParent(parent);
+        //var newMesh = new Mesh();
+        //newMesh.vertices = mesh.vertices;
+        //newMesh.triangles = mesh.triangles;
+        //var colors = new Color[mesh.vertices.Length];
+        //for (int i = 0; i < colors.Length; i++)
+        //{
+        //    colors[i] = block2Color[v];
+        //}
+        //newMesh.colors = colors;
+        //var go = new GameObject();
+        //var mf = go.AddComponent<MeshFilter>();
+        //mf.sharedMesh = newMesh;
+        //var mr = go.AddComponent<MeshRenderer>();
+        //mr.material = material;
+        //go.transform.position = position;
+        //go.transform.SetParent(parent);
     }
-
     private void Update()
     {
-        text.text = $"{island.currentOperation}:{island.isDone}";
-        if (island.isDone && !hasShown)
-        {
-            hasShown = true;
-            StartCoroutine(Show());
-        }
+        //text.text = $"{generator.currentOperation}:{generator.isDone}";
+        //if (generator.isDone && !hasShown)
+        //{
+        //    hasShown = true;
+        //    StartCoroutine(Show());
+        //}
     }
 }
