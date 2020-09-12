@@ -2,20 +2,12 @@
 using System.Threading.Tasks;
 using Core;
 using NUnit.Framework;
-using Terrain;
 using UnityEngine;
 
 namespace Tests
 {
     public class TerrainTest
     {
-        // A Test behaves as an ordinary method
-        [Test]
-        public async void 测试岛屿生成流程()
-        {
-            var island = new IslandGenerator(1, 8);
-            await island.GenerateAsync();
-        }
 
         [Test]
         public async void 测试二维噪声概率()
@@ -25,7 +17,7 @@ namespace Tests
             var range2Count = new int[10];
             var min = 0f;
             var max = 0f;
-            var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            var seed = Random.Range(int.MinValue, int.MaxValue);
             await Task.Run(() =>
             {
                 for (int x = 0; x < sampleCount; x++)
@@ -93,7 +85,7 @@ namespace Tests
         {
             var sampleCount = 100;
             var range2Count = new int[10];
-            var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            var seed = Random.Range(int.MinValue, int.MaxValue);
             await Task.Run(() =>
             {
                 for (int x = 0; x < sampleCount; x++)
@@ -157,7 +149,7 @@ namespace Tests
         {
             var sampleCount = 1000;
             var range2Count = new int[10];
-            var seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
+            var seed = Random.Range(int.MinValue, int.MaxValue);
             await Task.Run(() =>
             {
                 for (int x = 0; x < sampleCount; x++)

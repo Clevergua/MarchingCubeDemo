@@ -1,92 +1,90 @@
 ﻿using Core;
 using System.Collections.Generic;
+using Terrain;
 using UnityEngine;
 
 
 public class ChunkView : MonoBehaviour
 {
-    public void Draw(Coord2Int ldbCoord, byte[,,] blockmap)
+    [SerializeField] MeshFilter meshFilter;
+    private void Awake()
     {
+        meshFilter.mesh = new Mesh();
+    }
+    public void Draw(Coord3Int coord, Island island, List<Color> blockID2Color)
+    {
+        var chunkLength = IslandGenerator.ChunkLength;
         var ldbCoord = coord * chunkLength;
-        for (int x = ldbCoord.x; x < ldbCoord.x + chunkLength; x++)
+        for (int x = ldbCoord.x; x < ldbCoord.x + chunkLength - 1; x++)
         {
-            for (int z = ldbCoord.z; z < ldbCoord.z + chunkLength; z++)
+            for (int z = ldbCoord.z; z < ldbCoord.z + chunkLength - 1; z++)
             {
-                for (int y = ldbCoord.y; y < ldbCoord.y + chunkLength; y++)
+                for (int y = ldbCoord.y; y < ldbCoord.y + chunkLength - 1; y++)
                 {
-                    if (landVM.ContainsCoord(x + 1, y + 1, z + 1))
+                    if (island.InRange(x + 1, y + 1, z + 1))
                     {
                         var coordOffset = new Vector3(x + 0.5f, y + 0.5f, z + 0.5f);
 
-                        var ldbID = landVM.GetBlockID(x, y, z);
-                        var ldfID = landVM.GetBlockID(x, y, z + 1);
-                        var rdfID = landVM.GetBlockID(x + 1, y, z + 1);
-                        var rdbID = landVM.GetBlockID(x + 1, y, z);
-
-                        var lubID = landVM.GetBlockID(x, y + 1, z);
-                        var lufID = landVM.GetBlockID(x, y + 1, z + 1);
-                        var rufID = landVM.GetBlockID(x + 1, y + 1, z + 1);
-                        var rubID = landVM.GetBlockID(x + 1, y + 1, z);
-
+                        var ids = new byte[]
+                        {
+                            island[x, y, z],
+                            island[x, y, z + 1],
+                            island[x + 1, y, z + 1],
+                            island[x + 1, y, z],
+                            island[x, y + 1, z],
+                            island[x, y + 1, z + 1],
+                            island[x + 1, y + 1, z + 1],
+                            island[x + 1, y + 1, z]
+                        };
+                        var air = (byte)BlockType.Air;
                         var input = new bool[]
                         {
-                            ldbID != 0, ldfID != 0, rdfID != 0, rdbID != 0,
-                            lubID != 0, lufID != 0, rufID != 0, rubID != 0
-                        };
-
-                        var blockViewDatas = new BlockViewData[]
-                        {
-                            id2BlockViewData[ldbID],
-                            id2BlockViewData[ldfID],
-                            id2BlockViewData[rdfID],
-                            id2BlockViewData[rdbID],
-
-                            id2BlockViewData[lubID],
-                            id2BlockViewData[lufID],
-                            id2BlockViewData[rufID],
-                            id2BlockViewData[rubID],
+                            ids[0] != air, ids[1] != air, ids[2] != air, ids[3] != air,
+                            ids[4] != air, ids[5] != air, ids[6] != air, ids[7] != air
                         };
 
                         var index2Vertices = ColorfulMC.GetIndexToVertices(input);
                         var index2Normals = ColorfulMC.GetIndexToNormals(input);
+
+                        var vertices = new List<Vector3>();
+                        var normals = new List<Vector3>();
+                        var colors = new List<Color>();
+
                         foreach (var index in index2Vertices.Keys)
                         {
-                            var data = blockViewDatas[index];
-                            MCRenderer renderer;
-                            if (material2MCRenderer.ContainsKey(data.Material))
+                            var curVertices = index2Vertices[index];
+                            var currentNormals = index2Normals[index];
+                            var color = blockID2Color[ids[index]];
+                            for (int i = 0; i < curVertices.Length; i++)
                             {
-                                renderer = material2MCRenderer[data.Material];
+                                colors.Add(color);
                             }
-                            else
+                            for (int i = 0; i < curVertices.Length; i++)
                             {
-                                renderer = Instantiate(mcRendererPrefab, transform).GetComponent<MCRenderer>();
-                                renderer.Material = data.Material;
-                                material2MCRenderer.Add(data.Material, renderer);
-
+                                var v = curVertices[i] + coordOffset;
+                                vertices.Add(v);
                             }
-                            var colors = new Color[index2Vertices[index].Length];
-                            for (int i = 0; i < colors.Length; i++)
-                            {
-                                colors[i] = data.Color;
-                            }
-                            var vertices = new Vector3[index2Vertices[index].Length];
-                            for (int i = 0; i < index2Vertices[index].Length; i++)
-                            {
-                                vertices[i] = index2Vertices[index][i] + coordOffset;
-                            }
-                            renderer.AddMesh(vertices, index2Normals[index], colors);
+                            normals.AddRange(currentNormals);
                         }
+                        var triangles = new int[vertices.Count];
+                        for (int i = 0; i < vertices.Count; i++)
+                        {
+                            triangles[i] = i;
+                        }
+                        meshFilter.mesh.SetTriangles(triangles, 0);
+
+                        meshFilter.mesh.SetVertices(vertices);
+                        meshFilter.mesh.SetNormals(normals);
+                        meshFilter.mesh.SetColors(colors);
+
+
                     }
                     else
                     {
-                        //数据不足
+                        //越界不处理
                     }
                 }
             }
-        }
-        foreach (var renderer in material2MCRenderer.Values)
-        {
-            renderer.Show();
         }
     }
 }

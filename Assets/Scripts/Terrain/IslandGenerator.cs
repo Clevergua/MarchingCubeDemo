@@ -12,15 +12,14 @@ namespace Terrain
         public static readonly int MinNormalTerritoryCount = 2;
         public static readonly int MaxNormalTerritoryCount = 4;
         public static readonly int HeightNoiseImpactRange = 31;
-        public static readonly int ChunkLength;
+        public static readonly int ChunkLength = 16;
 
         public int progress { get; private set; }
         public string currentOperation { get; private set; }
-        public bool isDone { get; private set; } = false;
         public async Task<Island> GenerateAsync(int seed, int horizontalChunkCount)
         {
             var length = horizontalChunkCount * ChunkLength;
-            var height = VerticalChunkCount * horizontalChunkCount;
+            var height = VerticalChunkCount * ChunkLength;
             var grassLand = new GrassLand();
             var snowyMountain = new SnowyMountains();
             Dictionary<EnvironmentDegree, Biome> environmentDegree2Biome = new Dictionary<EnvironmentDegree, Biome>()
@@ -145,8 +144,7 @@ namespace Terrain
             progress = 100;
             currentOperation = "完成";
             Debug.Log(currentOperation);
-            isDone = true;
-            return new Island(environmentmap, territorymap, pathmap, blockmap);
+            return new Island(environmentmap, territorymap, pathmap, blockmap, horizontalChunkCount, VerticalChunkCount);
 
             #region 绘制二维信息图
             var texture = new Texture2D(length, length, TextureFormat.ARGB32, false);
