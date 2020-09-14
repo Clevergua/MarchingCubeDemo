@@ -15,11 +15,16 @@ public class ChunkView : MonoBehaviour
     {
         var chunkLength = IslandGenerator.ChunkLength;
         var ldbCoord = coord * chunkLength;
-        for (int x = ldbCoord.x; x < ldbCoord.x + chunkLength - 1; x++)
+
+        var vertices = new List<Vector3>();
+        var normals = new List<Vector3>();
+        var colors = new List<Color>();
+
+        for (int x = ldbCoord.x; x < ldbCoord.x + chunkLength; x++)
         {
-            for (int z = ldbCoord.z; z < ldbCoord.z + chunkLength - 1; z++)
+            for (int z = ldbCoord.z; z < ldbCoord.z + chunkLength; z++)
             {
-                for (int y = ldbCoord.y; y < ldbCoord.y + chunkLength - 1; y++)
+                for (int y = ldbCoord.y; y < ldbCoord.y + chunkLength; y++)
                 {
                     if (island.InRange(x + 1, y + 1, z + 1))
                     {
@@ -46,10 +51,6 @@ public class ChunkView : MonoBehaviour
                         var index2Vertices = ColorfulMC.GetIndexToVertices(input);
                         var index2Normals = ColorfulMC.GetIndexToNormals(input);
 
-                        var vertices = new List<Vector3>();
-                        var normals = new List<Vector3>();
-                        var colors = new List<Color>();
-
                         foreach (var index in index2Vertices.Keys)
                         {
                             var curVertices = index2Vertices[index];
@@ -66,18 +67,6 @@ public class ChunkView : MonoBehaviour
                             }
                             normals.AddRange(currentNormals);
                         }
-                        var triangles = new int[vertices.Count];
-                        for (int i = 0; i < vertices.Count; i++)
-                        {
-                            triangles[i] = i;
-                        }
-                        meshFilter.mesh.SetTriangles(triangles, 0);
-
-                        meshFilter.mesh.SetVertices(vertices);
-                        meshFilter.mesh.SetNormals(normals);
-                        meshFilter.mesh.SetColors(colors);
-
-
                     }
                     else
                     {
@@ -85,6 +74,19 @@ public class ChunkView : MonoBehaviour
                     }
                 }
             }
+        }
+        if (vertices.Count > 0)
+        {
+            meshFilter.mesh.SetVertices(vertices);
+            meshFilter.mesh.SetNormals(normals);
+            meshFilter.mesh.SetColors(colors);
+
+            List<int> triangles = new List<int>(vertices.Count);
+            for (int i = 0; i < vertices.Count; i++)
+            {
+                triangles.Add(i);
+            }
+            meshFilter.mesh.SetTriangles(triangles, 0);
         }
     }
 }

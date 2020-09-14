@@ -17,25 +17,15 @@ public class GameLoop : MonoBehaviour
     [SerializeField]
     private IslandView islandView;
 
-    private IslandGenerator generator;
-    private Task<Island> task;
     // Start is called before the first frame update
-    void Start()
+    async void Start()
     {
         seed = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
-        generator = new IslandGenerator();
-        task = Task.Run(() =>
-        {
-            return generator.GenerateAsync(seed, 4);
-        });
+        var generator = new IslandGenerator();
+        var island = await generator.GenerateAsync(seed, 16);
+        islandView.Init(island, block2Color);
     }
     private void Update()
     {
-        text.text = $"{generator.currentOperation}";
-        if (task != null && task.IsCompleted)
-        {
-            islandView.Init(task.Result, block2Color);
-            task = null;
-        }
     }
 }
